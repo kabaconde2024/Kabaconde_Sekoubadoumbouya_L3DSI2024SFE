@@ -30,4 +30,8 @@ const register = async (req, res) => {
     }
 };
 
-module.exports = { register };
+const login = async (req, res) => {
+   res.json("bonjour")
+};
+
+module.exports = { register ,login};
