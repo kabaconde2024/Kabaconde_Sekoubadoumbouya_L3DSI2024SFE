@@ -33,17 +33,18 @@ const creerFormation = async (req, res) => {
 };
 
 
-// Méthode pour afficher toutes les formations
-const afficherFormations = async () => {
-  try {
-    const toutesLesFormations = await Formation.find();
-    console.log('Formations récupérées avec succès:', toutesLesFormations);
-    return toutesLesFormations;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des formations :', error.message);
-    throw new Error('Erreur lors de la récupération des formations');
-  }
-};
+const afficherFormations = async (req, res) => {
+    try {
+      // Récupérer toutes les formations de la base de données
+      const toutesLesFormations = await Formation.find();
+  
+      // Envoyer les formations récupérées en réponse
+      res.status(200).json(toutesLesFormations);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des formations :', error.message);
+      res.status(500).json({ error: 'Erreur lors de la récupération des formations' });
+    }
+  };
 
 
 module.exports = {
