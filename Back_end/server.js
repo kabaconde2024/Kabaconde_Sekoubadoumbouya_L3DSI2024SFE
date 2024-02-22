@@ -14,7 +14,7 @@ mongoose.connect('mongodb://localhost:27017/Base', { useNewUrlParser: true, useU
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/adherent', require('./routes/adherent'));
-
+app.use('/api/formation', require('./routes/formation'));
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
