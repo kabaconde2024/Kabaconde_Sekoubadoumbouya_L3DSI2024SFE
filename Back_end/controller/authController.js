@@ -2,20 +2,6 @@
 const User = require('../model/User');
 const jwt = require('jsonwebtoken');
 
-// Fonction pour récupérer toutes les données d'utilisateurs
-const getAllUsers = async (req, res) => {
-    try {
-        // Récupérer tous les utilisateurs depuis la base de données
-        const users = await User.find();
-
-        res.status(200).json(users);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur lors de la récupération des utilisateurs." });
-    }
-};
-
-// Fonction pour enregistrer un nouvel utilisateur
 const register = async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -45,29 +31,35 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-
     try {
+        // Log de la réception de la requête POST sur /connexion
+        console.log('Requête POST reçue sur /connexion', req.body);
+
         const { email, password } = req.body;
 
-        // Recherche de l'utilisateur dans la base de données par email
-        const user = await User.findOne({ email });
-
-        // Vérification de l'existence de l'utilisateur et de la correspondance du mot de passe
-        if (!user || user.password !== password) {
-            return res.status(401).json({ message: 'Identifiants incorrects.' });
+        // Vérification de la présence des données du formulaire
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Les données du formulaire sont manquantes.' });
         }
 
-        // Authentification réussie
-        res.status(200).json({ message: 'Connexion réussie.', user });
+        // Recherche de l'utilisateur dans la base de données
+        const user = await User.findOne({ email, password });
+
+        // Vérification des identifiants de l'utilisateur
+        if (!user) {
+            return res.status(401).json({ error: 'Identifiants incorrects. Veuillez réessayer.' });
+        }
+
+        // Réponse de connexion réussie avec le rôle de l'utilisateur
+        res.status(200).json({ role: user.role, message: 'Connexion réussie.' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Erreur lors de la connexion.' });
+        // Gestion des erreurs lors de la connexion
+        console.error("Erreur lors de la connexion :", error);
+        res.status(500).json({ error: "Erreur serveur lors de la connexion" });
     }
 };
 
-module.exports = { register, getAllUsers, login };
-   res.json("bonjour")
+
 
 
 module.exports = { register ,login};
-
