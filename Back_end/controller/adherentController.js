@@ -18,20 +18,42 @@ const getAllUsers = async (req, res) => {
 // Supprimer un utilisateur par ID
 const deleteUserById = async (req, res) => {
     try {
-        const deletedUser = await User.findByIdAndRemove(req.params.id);
+        const resultat = await User.deleteOne({ _id: req.params.id });
 
-        if (!deletedUser) {
+        if (resultat.deletedCount === 0) {
             return res.status(404).json({ message: "Utilisateur non trouvé." });
         }
 
         res.status(200).json({ message: 'Utilisateur supprimé avec succès.' });
-    } catch (error) {
-        console.error(error);
+    } catch (erreur) {
+        console.error(erreur);
         res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur." });
     }
 };
 
+const updateUserById = async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        const resultat = await User.updateOne(
+            { _id: req.params.id },
+            { $set: { username, email, password } }
+        );
+
+        if (resultat.nModified === 0) {
+            return res.status(404).json({ message: "Utilisateur non trouvé ou aucune modification apportée." });
+        }
+
+        res.status(200).json({ message: 'Utilisateur mis à jour avec succès.' });
+    } catch (erreur) {
+        console.error(erreur);
+        res.status(500).json({ message: "Erreur lors de la mise à jour de l'utilisateur." });
+    }
+};
+
+
 module.exports = {
     getAllUsers,
     deleteUserById,
+    updateUserById,
 };
