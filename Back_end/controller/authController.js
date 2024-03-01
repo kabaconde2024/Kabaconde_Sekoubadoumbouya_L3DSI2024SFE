@@ -50,8 +50,8 @@ const login = async (req, res) => {
             return res.status(401).json({ error: 'Identifiants incorrects. Veuillez réessayer.' });
         }
 
-        // Réponse de connexion réussie avec le rôle de l'utilisateur
-        res.status(200).json({ role: user.role, message: 'Connexion réussie.' });
+        // Réponse de connexion réussie avec le rôle et l'ID de l'utilisateur
+        res.status(200).json({ roles: user.roles, userId: user._id, message: 'Connexion réussie.' });
     } catch (error) {
         // Gestion des erreurs lors de la connexion
         console.error("Erreur lors de la connexion :", error);
@@ -59,7 +59,30 @@ const login = async (req, res) => {
     }
 };
 
+const ajouterRole = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { roles } = req.body;
+
+        // Récupérer l'utilisateur par ID
+        const user = await User.findOneAndUpdate(
+            { _id: userId },
+            { $addToSet: { roles: { $each: roles } } }, // Utilisez $addToSet pour éviter les doublons
+            { upsert: true, new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        res.json({ message: 'Rôles mis à jour avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour des rôles :', error);
+        res.status(500).json({ error: 'Erreur lors de la mise à jour des rôles' });
+    }
+};
 
 
+  
 
-module.exports = { register ,login};
+module.exports = { register ,login,ajouterRole};

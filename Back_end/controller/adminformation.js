@@ -33,6 +33,27 @@ const creerFormation = async (req, res) => {
 };
 
 
+const afficher= async (req, res) => {
+    try {
+      const formationId = req.params.id;
+  
+      // Utilisez l'ID pour rechercher la formation dans la base de données
+      const formation = await Formation.findById(formationId);
+  
+      // Vérifiez si la formation existe
+      if (!formation) {
+        return res.status(404).json({ message: 'Formation non trouvée.' });
+      }
+  
+      // Renvoyez les détails de la formation
+      res.json(formation);
+    } catch (error) {
+      // Gérez les erreurs
+      console.error('Erreur lors de la récupération des détails de la formation :', error.message);
+      res.status(500).json({ message: 'Erreur serveur lors de la récupération des détails de la formation.' });
+    }
+  };
+
 const afficherFormations = async (req, res) => {
     try {
       // Récupérer toutes les formations de la base de données
@@ -45,6 +66,7 @@ const afficherFormations = async (req, res) => {
       res.status(500).json({ error: 'Erreur lors de la récupération des formations' });
     }
   };
+
 
   const updateFormation = async (req, res) => {
     try {
@@ -94,4 +116,5 @@ module.exports = {
     afficherFormations,
     updateFormation,
     deleteFormationById,
+    afficher,
 }

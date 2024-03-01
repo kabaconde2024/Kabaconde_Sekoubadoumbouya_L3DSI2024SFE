@@ -51,8 +51,10 @@ const updateUserById = async (req, res) => {
 };
 
 
+
 module.exports = {
     getAllUsers,
     deleteUserById,
     updateUserById,
+    
 };
