@@ -82,7 +82,41 @@ const ajouterRole = async (req, res) => {
     }
 };
 
-
+const removeRole = async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { role } = req.body;
   
+      const user = await User.findByIdAndUpdate(userId, { $pull: { roles: role } }, { new: true });
+  
+      if (!user) {
+        return res.status(404).json({ error: 'Utilisateur non trouvé' });
+      }
+  
+      res.json({ message: `Rôle "${role}" supprimé avec succès` });
+    } catch (error) {
+      console.error('Erreur lors de la suppression du rôle :', error);
+      res.status(500).json({ error: 'Erreur lors de la suppression du rôle' });
+    }
+  };
+  
+  const getRoles = async (req, res) => {
+    try {
+        const userId = req.params.id;
 
-module.exports = { register ,login,ajouterRole};
+        // Recherche de l'utilisateur dans la base de données par ID
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        // Renvoie les rôles de l'utilisateur
+        res.status(200).json({ roles: user.roles, message: 'Rôles récupérés avec succès.' });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des rôles :', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des rôles' });
+    }
+};
+
+module.exports = { register ,login,ajouterRole,removeRole,getRoles};

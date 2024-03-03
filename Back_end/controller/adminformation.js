@@ -67,6 +67,19 @@ const afficherFormations = async (req, res) => {
     }
   };
 
+  const afficherFormation = async (req, res) => {
+    try {
+        // Récupérer toutes les formations vérifiées de la base de données
+        const formationsVerifiees = await Formation.find({ verifie: false });
+
+        // Envoyer les formations vérifiées en réponse
+        res.status(200).json(formationsVerifiees);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des formations :', error.message);
+        res.status(500).json({ error: 'Erreur lors de la récupération des formations' });
+    }
+};
+
 
   const updateFormation = async (req, res) => {
     try {
@@ -113,8 +126,9 @@ const deleteFormationById = async (req, res) => {
 
 module.exports = {
     creerFormation,
-    afficherFormations,
+    afficherFormation,
     updateFormation,
     deleteFormationById,
     afficher,
+    afficherFormations,
 }

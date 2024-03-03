@@ -17,6 +17,8 @@ app.use('/api/adherent', require('./routes/adherent'));
 app.use('/api/formation', require('./routes/formation'));
 app.use('/api/adhesion', require('./routes/adhesion'));
 app.use('/api/participation', require('./routes/participations'));
+app.use('/api/session', require('./routes/sessions'));
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
