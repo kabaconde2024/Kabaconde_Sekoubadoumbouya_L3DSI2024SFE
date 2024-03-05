@@ -1,60 +1,81 @@
-const Adhesion = require('../model/Adhesion');
-const Utilisateur = require('../model/User');
+const Demande = require('../model/Demande');
+const User = require('../model/User');
+
+const express = require('express');
+const mongoose = require('mongoose');
 
 const ajout = async (req, res) => {
+    const { userId } = req.body;
+  
     try {
-        const users = await Utilisateur.find({ adherent: null }).select('_id');
-        console.log("Recherche de l'utilisateur par ID:", users);
-
-        const userIds = users.map(user => user._id);
-        console.log("Recherche de l'utilisateur par ID:", userIds);
-
-        const adhesions = await Adhesion.find().select('utilisateur');
-        console.log("Adhesion:", adhesions);
-
-        const usersWithoutAdhesion = userIds.filter(userId => !adhesions.map(adhesion => adhesion.utilisateur.toString()).includes(userId.toString()));
-        console.log("Utilisateurs sans adhésion:", usersWithoutAdhesion);
-
-        for (const userId of usersWithoutAdhesion) {
-            const newAdhesion = new Adhesion({
-                utilisateur: userId,
-                date: new Date(),
-                prix: 0,
-            });
-
-            console.log("Nouvelle adhésion créée:", newAdhesion);
-
-            await newAdhesion.save();
-
-            console.log("Adhésion sauvegardée dans la base de données.");
-
-            const utilisateur = await Utilisateur.findById(userId);
-            utilisateur.adhesion = newAdhesion._id;
-
-            // Recherche ou création du rôle "adherent"
-            let roleAdherent = await Role.findOne({ nom: 'adherent' });
-            console.log("Role Adherent créé :", roleAdherent);
-
-            if (!roleAdherent) {
-                // Créez le rôle "adherent" s'il n'existe pas
-                roleAdherent = new Role({ nom: 'adherent' });
-                await roleAdherent.save();
-                console.log("Role Adherent créé :", roleAdherent);
-            }
-
-            // Ajoutez le rôle "adherent" aux rôles de l'utilisateur
-            utilisateur.roles.push(roleAdherent._id);
-
-            // Mettre à jour le rôle de l'utilisateur avec "adherent"
-            await utilisateur.save();
-            break;
-        }
-
-        res.status(200).json({ message: 'Adhésions créées avec succès.' });
+      // Vérifiez si userId est une chaîne de caractères représentant un ObjectID valide
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ success: false, message: 'ID utilisateur invalide.' });
+      }
+  
+      // Récupérer le nom de l'utilisateur associé à l'ID
+      const user = await User.findById(userId);
+      const username = user.username;
+  
+      // Ajouter l'ID de l'utilisateur à la collection "demande" ou effectuer toute autre logique nécessaire
+      // Exemple avec MongoDB :
+      const demande = await Demande.create({ user: userId });
+  
+      // Informer l'admin de la demande avec le nom de l'utilisateur
+      // Vous pouvez utiliser des websockets, envoyer un email à l'admin, ou stocker les demandes dans une collection "notifications" dans la base de données
+      // Pour l'instant, renvoyons simplement le nom de l'utilisateur dans la réponse
+      res.status(200).json({ success: true, message: `Demande de ${username} traitée avec succès.`, demande });
     } catch (error) {
-        console.error('Erreur lors de la récupération des utilisateurs:', error);
-        res.status(500).json({ message: "Erreur lors de la récupération des utilisateurs." });
+      console.error('Erreur lors du traitement de la demande :', error);
+      res.status(500).json({ success: false, message: 'Erreur lors du traitement de la demande.' });
+    }
+  };
+  
+  const getDemandes = async (req, res) => {
+  try {
+    // Récupérer toutes les demandes depuis la base de données et peupler les informations de l'utilisateur
+    const demandes = await Demande.find().populate('user', 'username');
+
+    res.status(200).json({ success: true, demandes });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des demandes :', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des demandes.' });
+  }
+};
+
+
+  
+  const accepterAdhesion = async (req, res) => {
+    try {
+        const userId = req.body.userId;
+
+        // Ajoutez le rôle "adherent" à l'utilisateur
+        await User.findOneAndUpdate(
+            { _id: userId },
+            { $addToSet: { roles: { $each: ['adherent'] } } }, // Utilisez $addToSet pour éviter les doublons
+            { upsert: true, new: true }
+        );
+
+        // Recherche de la demande d'adhésion correspondante
+      const demande = await Demande.findOne({ user: userId });
+  
+      if (!demande) {
+        return res.status(404).json({ error: 'Demande d\'adhésion non trouvée' });
+      }
+  
+      // Mise à jour de la propriété accepte à true
+      demande.accepte = true;
+      await demande.save();
+
+        // Continuez le reste du traitement si nécessaire...
+
+        res.json({ message: 'Adhésion acceptée avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de l\'acceptation de l\'adhésion :', error);
+        res.status(500).json({ error: 'Erreur lors de l\'acceptation de l\'adhésion' });
     }
 };
 
-module.exports = { ajout };
+  
+  module.exports = { ajout,getDemandes,accepterAdhesion };
+  
