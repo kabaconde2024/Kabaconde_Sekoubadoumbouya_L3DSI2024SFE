@@ -8,6 +8,5 @@ const sessionSchema = new Schema({
     lieu: { type: String, required: true },
     formateur: { type: String, required: true },
     capacite: { type: Number, required: true },
-     // Autres champs spécifiques à la session
 });
 module.exports = mongoose.model('Session', sessionSchema);

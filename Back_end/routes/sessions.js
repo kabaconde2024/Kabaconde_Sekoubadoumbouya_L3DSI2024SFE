@@ -12,4 +12,5 @@ router.delete('/deleteSessionById/:id', deleteSessionById);
 router.get('/afficherDetailsSession/:id', afficherDetailsSession);
 
 
+
 module.exports = router;

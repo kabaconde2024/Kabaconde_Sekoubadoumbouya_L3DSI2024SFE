@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Formation = require('../model/Formation');
+const User = require('../model/User');
+
 
 // Méthode pour créer une nouvelle formation
 const creerFormation = async (req, res) => {
@@ -124,6 +126,36 @@ const deleteFormationById = async (req, res) => {
     }
 };
 
+const accepterFormation = async (req, res) => {
+    try {
+        const userId = req.body.userId;
+
+        // Ajoutez le rôle "adherent" à l'utilisateur
+        await User.findOneAndUpdate(
+            { _id: userId },
+            { $addToSet: { roles: { $each: ['formateur'] } } }, // Utilisez $addToSet pour éviter les doublons
+            { upsert: true, new: true }
+        );
+
+        const formation = await Formation.findOne({ user: userId });
+  
+        if (!formation) {
+          return res.status(404).json({ error: 'Demande d\'adhésion non trouvée' });
+        }
+    
+        // Mise à jour de la propriété accepte à true
+        formation.verifie = true;
+        await formation.save();
+        console.log("la valeur de Verifie :"+formation.verifie);
+
+
+        res.json({ message: 'Adhésion acceptée avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de l\'acceptation de l\'adhésion :', error);
+        res.status(500).json({ error: 'Erreur lors de l\'acceptation de l\'adhésion' });
+    }
+};
+
 module.exports = {
     creerFormation,
     afficherFormation,
@@ -131,4 +163,5 @@ module.exports = {
     deleteFormationById,
     afficher,
     afficherFormations,
+    accepterFormation,
 }

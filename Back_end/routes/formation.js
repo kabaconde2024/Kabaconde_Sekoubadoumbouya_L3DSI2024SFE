@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 // Importez la fonction getAllUsers depuis le contrôleur authController
-const { creerFormation, afficherFormation,updateFormation,deleteFormationById,afficher,afficherFormations} = require('../controller/adminformation');
+const { creerFormation, afficherFormation,updateFormation,deleteFormationById,afficher,afficherFormations,accepterFormation} = require('../controller/adminformation');
 router.post('/creerFormation', creerFormation);
+router.post('/accepterFormation', accepterFormation);
 router.get('/afficherFormation', afficherFormation);
 router.get('/afficherFormations', afficherFormations);
 router.get('/afficher/:id', afficher);
