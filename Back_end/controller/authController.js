@@ -53,13 +53,34 @@ const login = async (req, res) => {
         }
 
         // Réponse de connexion réussie avec le rôle et l'ID de l'utilisateur
-        res.status(200).json({ roles: user.roles, userId: user._id, message: 'Connexion réussie.' });
+        res.status(200).json({ roles: user.roles, userId: user._id, username: user.username, email:user.email, message: 'Connexion réussie.' });
     } catch (error) {
         // Gestion des erreurs lors de la connexion
         console.error("Erreur lors de la connexion :", error);
         res.status(500).json({ error: "Erreur serveur lors de la connexion" });
     }
 };
+
+const updateUserById = async (req, res) => {
+    try {
+        const { username, email } = req.body;
+
+        const resultat = await User.updateOne(
+            { _id: req.params.id },
+            { $set: { username, email } }
+        );
+
+        if (resultat.nModified === 0) {
+            return res.status(404).json({ message: "Utilisateur non trouvé ou aucune modification apportée." });
+        }
+
+        res.status(200).json({ message: 'Utilisateur mis à jour avec succès.' });
+    } catch (erreur) {
+        console.error(erreur);
+        res.status(500).json({ message: "Erreur lors de la mise à jour de l'utilisateur." });
+    }
+};
+
 
 const ajouterRole = async (req, res) => {
     try {
@@ -121,4 +142,4 @@ const removeRole = async (req, res) => {
     }
 };
 
-module.exports = { register ,login,ajouterRole,removeRole,getRoles};
+module.exports = { register ,login,ajouterRole,removeRole,getRoles,updateUserById};
