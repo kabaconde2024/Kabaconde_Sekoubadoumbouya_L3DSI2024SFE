@@ -129,32 +129,53 @@ const deleteFormationById = async (req, res) => {
 const accepterFormation = async (req, res) => {
     try {
         const userId = req.body.userId;
+        const formationId = req.body.formationId;
 
-        // Ajoutez le rôle "adherent" à l'utilisateur
-        await User.findOneAndUpdate(
+        // Vérifier si l'utilisateur a déjà cette formation
+        const user = await User.findById(userId);
+        if (user.formations.includes(formationId)) {
+            return res.status(400).json({ error: 'L\'utilisateur a déjà cette formation.' });
+        }
+
+        // Mise à jour de l'utilisateur
+        const updatedUser = await User.findOneAndUpdate(
             { _id: userId },
-            { $addToSet: { roles: { $each: ['formateur'] } } }, // Utilisez $addToSet pour éviter les doublons
-            { upsert: true, new: true }
+            { 
+                $addToSet: { roles: 'formateur' },
+                $push: { formations: formationId }
+            },
+            { new: true }
         );
 
-        const formation = await Formation.findOne({ user: userId });
-  
-        if (!formation) {
-          return res.status(404).json({ error: 'Demande d\'adhésion non trouvée' });
-        }
-    
-        // Mise à jour de la propriété accepte à true
-        formation.verifie = true;
-        await formation.save();
-        console.log("la valeur de Verifie :"+formation.verifie);
+        console.log('Updated User:', updatedUser);
 
-
-        res.json({ message: 'Adhésion acceptée avec succès' });
+        res.json({ message: 'Adhésion acceptée avec succès', user: updatedUser });
     } catch (error) {
         console.error('Erreur lors de l\'acceptation de l\'adhésion :', error);
         res.status(500).json({ error: 'Erreur lors de l\'acceptation de l\'adhésion' });
     }
 };
+
+
+const formationsByFormateur = async (req, res) => {
+    try {
+        const formateurId = req.params.id;
+
+        // Recherchez les formations attribuées à un formateur spécifique
+        const formateur = await User.findOne({ _id: formateurId }).populate('formations');
+
+        if (!formateur) {
+            return res.status(404).json({ message: 'Aucune formation trouvée pour ce formateur.' });
+        }
+
+        res.status(200).json(formateur.formations);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des formations par formateur :', error.message);
+        res.status(500).json({ error: 'Erreur lors de la récupération des formations par formateur' });
+    }
+};
+
+
 
 module.exports = {
     creerFormation,
@@ -164,4 +185,5 @@ module.exports = {
     afficher,
     afficherFormations,
     accepterFormation,
+    formationsByFormateur,
 }

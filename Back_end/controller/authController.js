@@ -13,11 +13,12 @@ const register = async (req, res) => {
             return res.status(400).json({ message: 'Cet utilisateur existe déjà.' });
         }
 
-        // Créer un nouvel utilisateur avec le mot de passe brut
+        // Créer un nouvel utilisateur avec le mot de passe brut et formations initialisé à un tableau vide
         const newUser = new User({
             username,
             email,
             password: password.trim(), // Enregistrez le mot de passe brut ici
+            formations: [],
         });
 
         // Sauvegarder l'utilisateur dans la base de données
@@ -29,6 +30,7 @@ const register = async (req, res) => {
         res.status(500).json({ message: "Erreur lors de l'inscription." });
     }
 };
+
 
 const login = async (req, res) => {
     try {

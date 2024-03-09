@@ -5,32 +5,22 @@ const Sessions = require('../model/Session');
 
 const creerSession = async (req, res) => {
     try {
-        const { formation, dateDebut, dateFin, lieu, formateur, capacite } = req.body;
-
-        // Vérifier si la formation a déjà une session
-        const existingFormation = await Formation.findOne({ _id: formation, session: { $exists: true } });
-
-        if (existingFormation) {
-            return res.status(400).json({ message: 'Cette formation a déjà une session.' });
-        }
+        const { formations, dateDebut, dateFin, lieu, capacite } = req.body;
 
         // Créer une nouvelle session
         const nouvelleSession = new Sessions({
-            formation,
+            formations,
             dateDebut,
             dateFin,
             lieu,
-            formateur,
             capacite,
         });
-        
-        await Formation.findByIdAndUpdate(formation, { verifie: true });
 
         // Sauvegarder la session dans la base de données
         await nouvelleSession.save();
 
-        // Mettre à jour la référence de session dans la formation
-        await Formation.findByIdAndUpdate(formation, { session: nouvelleSession._id });
+        // Mettre à jour la référence de session dans les formations associées
+        await Formation.updateMany({ _id: { $in: formations } }, { $push: { sessions: nouvelleSession._id } });
 
         res.status(201).json({ message: 'Session créée avec succès.' });
     } catch (error) {
@@ -38,6 +28,7 @@ const creerSession = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la création de la session.' });
     }
 };
+
 
 const afficherSessions = async (req, res) => {
     try {
