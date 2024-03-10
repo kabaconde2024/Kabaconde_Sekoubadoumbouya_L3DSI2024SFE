@@ -10,7 +10,6 @@ const AdhesionSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  prix: Number
 });
 
 const Adhesion = mongoose.model('Adhesion', AdhesionSchema);

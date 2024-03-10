@@ -6,6 +6,7 @@ const formationSchema = new Schema({
     description: { type: String, required: true },
     date: { type: String, required: true },
     prix: { type: Number, required: true },
+    etat: { type: [String], default: ["En cours"] },
     verifie: { type: Boolean, default: false }, 
     sessions: [{ type: Schema.Types.ObjectId, ref: 'Session' }],
 
