@@ -81,29 +81,43 @@ const updateUserById = async (req, res) => {
     }
 };
 
-
 const ajouterRole = async (req, res) => {
     try {
         const userId = req.params.id;
         const { roles } = req.body;
 
         // Récupérer l'utilisateur par ID
-        const user = await User.findOneAndUpdate(
-            { _id: userId },
-            { $addToSet: { roles: { $each: roles } } }, // Utilisez $addToSet pour éviter les doublons
-            { upsert: true, new: true }
-        );
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({ error: 'Utilisateur non trouvé' });
         }
 
-        res.json({ message: 'Rôles mis à jour avec succès' });
+        // Vérifier si les rôles à ajouter existent déjà dans le tableau des rôles de l'utilisateur
+        const existingRoles = user.roles.filter(role => roles.includes(role));
+
+        if (existingRoles.length > 0) {
+            return res.status(400).json({ error: 'Ce rôle est  déjà attribués à l\'utilisateur' });
+        }
+
+        // Ajouter les nouveaux rôles
+        user.roles.push(...roles);
+        await user.save();
+
+        res.json({ message: 'Rôles ajoutés avec succès' });
     } catch (error) {
-        console.error('Erreur lors de la mise à jour des rôles :', error);
-        res.status(500).json({ error: 'Erreur lors de la mise à jour des rôles' });
+        console.error('Erreur lors de l\'ajout des rôles :', error);
+
+        // Vérifier si c'est une erreur de validation due aux rôles déjà existants
+        if (error.name === 'ValidationError' && error.message.includes('roles')) {
+            return res.status(400).json({ error: 'Certains rôles sont déjà attribués à l\'utilisateur' });
+        }
+
+        res.status(500).json({ error: 'Erreur lors de l\'ajout des rôles' });
     }
 };
+
+
 
 const removeRole = async (req, res) => {
     try {
@@ -142,4 +156,14 @@ const removeRole = async (req, res) => {
     }
 };
 
-module.exports = { register ,login,ajouterRole,removeRole,getRoles,updateUserById};
+const getcollaborateurs= async (req, res) => {
+    try {
+      const collaborateurs = await User.find({ roles: 'collaborateur' });
+      res.json(collaborateurs);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des collaborateurs :', error);
+      res.status(500).json({ error: 'Erreur serveur lors de la récupération des collaborateurs.' });
+    }
+  };
+
+module.exports = { register ,login,ajouterRole,removeRole,getRoles,updateUserById,getcollaborateurs};
