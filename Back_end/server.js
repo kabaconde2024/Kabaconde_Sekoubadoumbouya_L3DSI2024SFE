@@ -43,6 +43,8 @@ app.use('/api/formation', require('./routes/formation'));
 app.use('/api/adhesion', require('./routes/adhesion'));
 app.use('/api/participation', require('./routes/participations'));
 app.use('/api/session', require('./routes/sessions'));
+app.use('/api/documents', require('./routes/document'));
+
 
 
 app.post('/api/images/uploadImage/:userId', upload.single('image'), (req, res) => {

@@ -76,6 +76,28 @@ const ajout = async (req, res) => {
     }
 };
 
+
+const getMessage = async (req, res) => {
+  try {
+    // Récupérer la première demande depuis la base de données
+    const demande = await Demande.findOne();
+
+    // Vérifier si la demande existe
+    if (demande) {
+      // Récupérer le contenu du message
+      const message = demande.message;
+      console.log("contenu message :"+message);
+      res.status(200).json({ success: true, message });
+    } else {
+      res.status(404).json({ success: false, message: 'Aucune demande trouvée.' });
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la demande :', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération de la demande.' });
+  }
+};
+
+
   
-  module.exports = { ajout,getDemandes,accepterAdhesion };
+  module.exports = { ajout,getDemandes,accepterAdhesion,getMessage};
   

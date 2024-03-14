@@ -1,0 +1,72 @@
+const Document = require('../model/Document');
+
+
+const conn = mongoose.connection;
+let gfs;
+
+conn.once('open', () => {
+  // Initialiser GridFS
+  gfs = Grid(conn.db, mongoose.mongo);
+  gfs.collection('uploads');
+});  
+
+const ajoutDocument = async (req, res) => {
+  try {
+    // Vérifiez si un fichier a été téléchargé
+    if (!req.file) {
+      return res.status(400).json({ message: 'Aucun fichier téléchargé.' });
+    }
+
+    // Utilisez le nom original du fichier avec son extension
+    const newDocument = new Document({
+      path: req.file.originalname,
+      description: req.body.description,
+      types: req.body.types.split(','),
+    });
+
+    // Enregistrez le document dans la base de données
+    const savedDocument = await newDocument.save();
+
+    res.status(201).json(savedDocument);
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout du document :', error.message);
+    res.status(500).json({ message: 'Erreur lors de l\'ajout du document.' });
+  }
+};
+const getDocuments = async (req, res) => {
+  try {
+    // Récupérez tous les documents depuis la base de données
+    const documents = await Document.find();
+
+    res.status(200).json(documents);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des documents :', error.message);
+    res.status(500).json({ message: 'Erreur lors de la récupération des documents.' });
+  }
+};
+
+
+const telechargement= async (req, res) => {
+  try {
+    const document = await Document.findById(req.params.id);
+
+    if (!document) {
+      return res.status(404).json({ message: 'Document non trouvé.' });
+    }
+
+    const readStream = gfs.createReadStream({
+      filename: document.path,
+      root: 'uploads',
+    });
+
+    res.set('Content-Type', 'application/octet-stream');
+    res.set('Content-Disposition', `attachment; filename=${document.path}`);
+
+    readStream.pipe(res);
+  } catch (error) {
+    console.error('Erreur lors du téléchargement du document :', error.message);
+    res.status(500).json({ message: 'Erreur lors du téléchargement du document.' });
+  }
+};
+
+module.exports = { ajoutDocument,getDocuments,telechargement };
