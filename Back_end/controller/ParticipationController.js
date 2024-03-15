@@ -1,6 +1,11 @@
 const express = require('express');
-
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const app = express();
+app.use(bodyParser.json());
 const Formation = require('../model/Formation');
+const User = require('../model/User');
+
  // Assurez-vous que vous importez correctement le modèle "Formation"
 const Participation = require('../model/Participation');
 
@@ -10,18 +15,18 @@ const ajouterparticiaption = async (req, res) => {
     try {
         console.log('Requête POST reçue sur /participations', req.body);
 
-        const { userId, formationId } = req.body;
+        const { user, formation } = req.body;
 
-        console.log('UserID et FormationID extraits de la requête :', userId, formationId);
+        console.log('UserID et FormationID extraits de la requête :', user, formation);
 
         // Vérifiez si userId est défini
-        if (!userId) {
+        if (!user) {
             console.log('ID d\'utilisateur manquant dans la requête.');
             return res.status(400).json({ message: 'ID d\'utilisateur manquant dans la requête.' });
         }
 
         // Vérifiez si l'utilisateur a déjà participé à cette formation
-        const existingParticipation = await Participation.findOne({ user: userId, formation: formationId });
+        const existingParticipation = await Participation.findOne({ user, formation });
 
         if (existingParticipation) {
             console.log('L\'utilisateur a déjà participé à cette formation.');
@@ -29,7 +34,7 @@ const ajouterparticiaption = async (req, res) => {
         }
 
         // Créez une nouvelle participation
-        const newParticipation = new Participation({ user: userId, formation: formationId });
+        const newParticipation = new Participation({ user, formation });
 
         // Enregistrez la participation dans la base de données
         const savedParticipation = await newParticipation.save();

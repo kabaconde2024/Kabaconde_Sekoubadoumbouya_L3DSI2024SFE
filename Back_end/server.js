@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
+const stripe = require('stripe')('sk_test_51OuEfcRuWErPhnDe00PMhcbxFWXVZOd950QjBWk8JxnG4Z9n9A1XUuiQ82MMbM2cXisvmer8mPMVWmy7ocGE9d2300tIundsmy');
 
 
 const app = express();
@@ -62,6 +63,23 @@ app.post('/api/images/uploadImage/:userId', upload.single('image'), (req, res) =
     }
 });
 
+
+
+// Endpoint pour créer un paiement
+app.post('/create-payment-intent', async (req, res) => {
+  const { amount } = req.body;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'dollar', // Changer en la devise de votre choix
+    });
+    res.send({ clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.error('Erreur lors de la création du paiement:', error);
+    res.status(500).send({ error: 'Une erreur est survenue lors du traitement du paiement.' });
+  }
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

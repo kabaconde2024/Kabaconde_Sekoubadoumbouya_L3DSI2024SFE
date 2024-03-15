@@ -5,7 +5,7 @@ const demandeSchema = new Schema({
    
     user: { type: Schema.Types.ObjectId, ref: 'User', unique: true, sparse: true },
     accepte:{type: Boolean,default:false},
-    message:{type: String,default:"Votre demande d'adhesion a ete accepte avec success"}
+    message:{type: String,default:"votre demande "}
 
 });
 
