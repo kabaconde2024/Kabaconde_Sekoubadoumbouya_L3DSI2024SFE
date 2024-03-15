@@ -72,7 +72,7 @@ app.post('/create-payment-intent', async (req, res) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
-      currency: 'dollar', // Changer en la devise de votre choix
+      currency: 'usd', // Changer en la devise de votre choix
     });
     res.send({ clientSecret: paymentIntent.client_secret });
   } catch (error) {

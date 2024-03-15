@@ -9,7 +9,8 @@ const formationSchema = new Schema({
     prix: { type: Number, required: true },
     etat: { type: [String], default: ["En cours"] },
     verifie: { type: Boolean, default: false }, 
-    sessions: [{ type: Schema.Types.ObjectId, ref: 'Session' }],
+    sessions: [{ type: Schema.Types.ObjectId, ref: 'Session' }] // Référence à plusieurs sessions
+
 });
 
 module.exports = mongoose.model('Formation', formationSchema);

@@ -5,11 +5,11 @@ const Sessions = require('../model/Session');
 
 const creerSession = async (req, res) => {
     try {
-        const { formations, dateDebut, dateFin, lieu, capacite } = req.body;
+        const { formation, dateDebut, dateFin, lieu, capacite } = req.body;
 
         // Créer une nouvelle session
         const nouvelleSession = new Sessions({
-            formations,
+            formation,
             dateDebut,
             dateFin,
             lieu,
@@ -20,7 +20,7 @@ const creerSession = async (req, res) => {
         await nouvelleSession.save();
 
         // Mettre à jour la référence de session dans les formations associées
-        await Formation.updateMany({ _id: { $in: formations } }, { $push: { sessions: nouvelleSession._id } });
+        await Formation.updateMany({ _id: { $in: formation } }, { $push: { sessions: nouvelleSession._id } });
 
         res.status(201).json({ message: 'Session créée avec succès.' });
     } catch (error) {
@@ -42,6 +42,9 @@ const afficherSessions = async (req, res) => {
         res.status(500).json({ error: 'Erreur lors de la récupération des sessions' });
     }
 };
+
+
+
 
 const updateSession = async (req, res) => {
     try {
@@ -110,5 +113,6 @@ module.exports = {
     afficherSessions,
     updateSession,
     deleteSessionById,
-    afficherDetailsSession
+    afficherDetailsSession,
+    
 };

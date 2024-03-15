@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Formation = require('../model/Formation');
 const User = require('../model/User');
+const Session = require('../model/Session');
 
 
 // Méthode pour créer une nouvelle formation
@@ -177,6 +178,27 @@ const formationsByFormateur = async (req, res) => {
     }
 };
 
+const recupererSessionsFormation = async (req, res) => {
+    try {
+        const formationId = req.params.formationId;
+
+        // Recherchez la formation dans la base de données en utilisant son ID
+        const formation = await Formation.findById(formationId).populate('sessions');
+
+        // Vérifiez si la formation existe
+        if (!formation) {
+            return res.status(404).json({ message: 'Formation non trouvée' });
+        }
+
+        // Récupérez les sessions de la formation
+        const sessionsFormation = formation.sessions;
+
+        res.status(200).json({ sessionsFormation });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des sessions de la formation :', error.message);
+        res.status(500).json({ error: 'Erreur lors de la récupération des sessions de la formation' });
+    }
+};
 
 
 module.exports = {
@@ -188,4 +210,5 @@ module.exports = {
     afficherFormations,
     accepterFormation,
     formationsByFormateur,
+    recupererSessionsFormation,
 }
