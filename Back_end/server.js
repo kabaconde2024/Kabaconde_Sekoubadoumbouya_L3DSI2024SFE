@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
-const stripe = require('stripe')('sk_test_51OuEfcRuWErPhnDe00PMhcbxFWXVZOd950QjBWk8JxnG4Z9n9A1XUuiQ82MMbM2cXisvmer8mPMVWmy7ocGE9d2300tIundsmy');
+const stripe = require('stripe')('sk_test_51OuEfnCqxrSciSMnnyaaPwvGLxW4BdkIF2UdBwBrbEe92KYXfrFww2qwD1rzWW1e3WyJbEzFnnOA9afgPcpLoLr700WrDYu5HF');
 
 
 const app = express();
@@ -72,7 +72,7 @@ app.post('/create-payment-intent', async (req, res) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
-      currency: 'dollar', // Changer en la devise de votre choix
+      currency: 'USD', // Changer en la devise de votre choix
     });
     res.send({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
