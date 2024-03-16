@@ -18,9 +18,9 @@ const ajoutDocument = async (req, res) => {
 
     // Enregistrez le document dans la base de données avec le nom généré
     const newDocument = new Document({
+      date: req.body.date,
       path: fileName,
       description: req.body.description,
-      types: req.body.types.split(','),
     });
 
     const savedDocument = await newDocument.save();
@@ -77,52 +77,5 @@ const telechargement = async (req, res) => {
 };
 
 
-const getBilan = async (req, res) => {
-  try {
-    // Récupérez tous les documents depuis la base de données
-    const documents = await Document.find({ types: 'bilan' });
 
-    res.status(200).json(documents);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des documents :', error.message);
-    res.status(500).json({ message: 'Erreur lors de la récupération des documents.' });
-  }
-};
-
-const getPlan = async (req, res) => {
-  try {
-    // Récupérez tous les documents depuis la base de données
-    const documents = await Document.find({ types: 'plan' });
-    
-    res.status(200).json(documents);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des documents :', error.message);
-    res.status(500).json({ message: 'Erreur lors de la récupération des documents.' });
-  }
-};
-
-const getAvis = async (req, res) => {
-  try {
-    // Récupérez tous les documents depuis la base de données
-    const documents = await Document.find({ types: 'avis' });
-    
-    res.status(200).json(documents);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des documents :', error.message);
-    res.status(500).json({ message: 'Erreur lors de la récupération des documents.' });
-  }
-};
-
-const getPv = async (req, res) => {
-  try {
-    // Récupérez tous les documents depuis la base de données
-    const documents = await Document.find({ types: 'pv' });
-    
-    res.status(200).json(documents);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des documents :', error.message);
-    res.status(500).json({ message: 'Erreur lors de la récupération des documents.' });
-  }
-};
-
-module.exports = { ajoutDocument, getDocuments, telechargement,getBilan,getPlan,getAvis,getPv };
+module.exports = { ajoutDocument, getDocuments, telechargement };
