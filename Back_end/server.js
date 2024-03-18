@@ -5,7 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
 const stripe = require('stripe')('sk_test_51OuEfnCqxrSciSMnnyaaPwvGLxW4BdkIF2UdBwBrbEe92KYXfrFww2qwD1rzWW1e3WyJbEzFnnOA9afgPcpLoLr700WrDYu5HF');
-
+const evenement = require('./routes/evenement'); 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,23 +45,25 @@ app.use('/api/adhesion', require('./routes/adhesion'));
 app.use('/api/participation', require('./routes/participations'));
 app.use('/api/session', require('./routes/sessions'));
 app.use('/api/documents', require('./routes/document'));
+app.use('/api/evenement', require('./routes/evenement'));
 
 
 
 app.post('/api/images/uploadImage/:userId', upload.single('image'), (req, res) => {
-    try {
-      // Le fichier est enregistré avec succès, vous pouvez faire quelque chose avec req.file
-      console.log('Image téléchargée avec succès:', req.file);
+  try {
+    // Le fichier est enregistré avec succès, vous pouvez faire quelque chose avec req.file
+    console.log('Image téléchargée avec succès:', req.file);
 
-      // Construisez l'URL complète de l'image sur votre serveur
-      const imageURL = `http://localhost:5000/uploads/${req.file.filename}`;
+    // Construisez l'URL complète de l'image sur votre serveur
+    const imageURL = `http://localhost:5000/uploads/${req.file.filename}`;
 
-      res.status(200).json({ message: 'Image téléchargée avec succès', imageURL });
-    } catch (error) {
-      console.error('Erreur lors du téléchargement de l\'image:', error);
-      res.status(500).json({ error: 'Erreur lors du téléchargement de l\'image' });
-    }
+    res.status(200).json({ message: 'Image téléchargée avec succès', imageURL });
+  } catch (error) {
+    console.error('Erreur lors du téléchargement de l\'image:', error);
+    res.status(500).json({ error: 'Erreur lors du téléchargement de l\'image' });
+  }
 });
+
 
 
 

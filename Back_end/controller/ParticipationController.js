@@ -48,6 +48,9 @@ const ajouterparticiaption = async (req, res) => {
     }
 };
 
+
+
+
 const afficherparticipation = async (req, res) => {
 
     try {

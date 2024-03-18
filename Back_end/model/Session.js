@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const sessionSchema = new Schema({
-    formations: [{ type: Schema.Types.ObjectId, ref: 'Formation' }],
+    formation: { type: Schema.Types.ObjectId, ref: 'Formation', required: true },
     dateDebut: { type: Date, required: true },
     dateFin: { type: Date, required: true },
     lieu: { type: String, required: true },
