@@ -77,6 +77,7 @@ const getEvenement = async (req, res) => {
       res.status(500).json({ message: 'Une erreur est survenue lors de la suppression de l\'événement.' });
     }
   };
+
   const modifierEvenement = async (req, res) => {
     const { id } = req.params;
   
@@ -96,11 +97,19 @@ const getEvenement = async (req, res) => {
       evenement.titre = req.body.titre || evenement.titre;
       evenement.description = req.body.description || evenement.description;
       evenement.date = req.body.date || evenement.date;
-      evenement.image = req.file ? req.file.filename : evenement.image; // Vérifiez si req.file est défini
-  
+      
+      // Vérifiez si req.file est défini pour mettre à jour l'image
+      if (req.file) {
+       evenement.image = req.file.filename;
+
+      }
+      console.log("image la mise a jour "+evenement.image);
+
+  console.log("Avant la mise a jour "+evenement);
       // Enregistrer les modifications dans la base de données
       await evenement.save();
-  
+      console.log("Apres la mise a jour "+evenement);
+
       // Répondre avec succès
       res.status(200).json({ message: 'Événement modifié avec succès.' });
     } catch (error) {
@@ -108,6 +117,5 @@ const getEvenement = async (req, res) => {
       res.status(500).json({ message: 'Une erreur est survenue lors de la modification de l\'événement.' });
     }
   };
-  
   
 module.exports = { ajoutEvenement,getEvenement,supprimerEvenement,modifierEvenement };
