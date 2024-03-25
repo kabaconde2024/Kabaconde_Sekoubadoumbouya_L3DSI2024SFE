@@ -70,6 +70,20 @@ const afficherFormations = async (req, res) => {
     }
   };
 
+  const  Afficher=async(req,res)=>{
+    try {
+        const formation = await Formation.findById(req.params.id);
+        if (!formation) {
+          return res.status(404).json({ message: 'Formation non trouvée' });
+        }
+        res.status(200).json({ formation });
+      } catch (error) {
+        console.error('Erreur lors de la récupération des détails de la formation :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des détails de la formation' });
+      }
+  }
+
+
   const afficherFormation = async (req, res) => {
     try {
         // Récupérer toutes les formations vérifiées de la base de données
@@ -209,4 +223,5 @@ module.exports = {
     accepterFormation,
     formationsByFormateur,
     recupererSessionsFormation,
+    Afficher,
 }

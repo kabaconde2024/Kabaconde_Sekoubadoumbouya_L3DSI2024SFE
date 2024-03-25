@@ -7,9 +7,9 @@ const participationSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    formation: {
+    session: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Formation',
+        ref: 'Session',
         required: true,
     },
 });

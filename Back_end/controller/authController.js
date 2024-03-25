@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 
 const register = async (req, res) => {
     try {
-        const { username, email } = req.body;
+        const { username, email,telephone } = req.body;
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
         // Vérifier si l'utilisateur existe déjà
@@ -19,6 +19,7 @@ const register = async (req, res) => {
         const newUser = new User({
             username,
             email,
+            telephone,
             password: hashedPassword, // Enregistrez le mot de passe brut ici
             formations: [],
         });
@@ -69,11 +70,11 @@ const login = async (req, res) => {
 };
 const updateUserById = async (req, res) => {
     try {
-        const { username, email } = req.body;
+        const { username, email,telephone } = req.body;
 
         const resultat = await User.updateOne(
             { _id: req.params.id },
-            { $set: { username, email } }
+            { $set: { username, email,telephone } }
         );
 
         if (resultat.nModified === 0) {

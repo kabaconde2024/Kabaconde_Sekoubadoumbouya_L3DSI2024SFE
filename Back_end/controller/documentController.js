@@ -34,8 +34,8 @@ const ajoutDocument = async (req, res) => {
 
 const getDocuments = async (req, res) => {
   try {
-    // Récupérez tous les documents depuis la base de données
-    const documents = await Document.find();
+    // Récupérez tous les documents depuis la base de données où publication est true
+    const documents = await Document.find({ publication: true });
 
     res.status(200).json(documents);
   } catch (error) {
@@ -43,6 +43,9 @@ const getDocuments = async (req, res) => {
     res.status(500).json({ message: 'Erreur lors de la récupération des documents.' });
   }
 };
+
+
+
 
 const telechargement = async (req, res) => {
   try {
@@ -76,6 +79,42 @@ const telechargement = async (req, res) => {
   }
 };
 
+const getDocumentAdmin = async (req, res) => {
+  try {
+    // Récupérez tous les documents depuis la base de données où publication est true
+    const documents = await Document.find();
 
+    res.status(200).json(documents);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des documents :', error.message);
+    res.status(500).json({ message: 'Erreur lors de la récupération des documents.' });
+  }
+};
 
-module.exports = { ajoutDocument, getDocuments, telechargement };
+const updateDocumentPublication = async (req, res) => {
+  try {
+    const documentId = req.params.id;
+    const { publication } = req.body;
+
+    // Rechercher le document dans la base de données par son identifiant
+    const document = await Document.findById(documentId);
+
+    if (!document) {
+      return res.status(404).json({ message: 'Document non trouvé.' });
+    }
+
+    // Mettre à jour la propriété de publication du document
+    document.publication = publication;
+
+    // Sauvegarder les modifications dans la base de données
+    const updatedDocument = await document.save();
+
+    // Répondre avec le document mis à jour
+    res.status(200).json({ message: 'Publication du document mise à jour.', document: updatedDocument });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la publication du document :', error.message);
+    res.status(500).json({ message: 'Erreur lors de la mise à jour de la publication du document.' });
+  }
+};
+
+module.exports = { ajoutDocument, getDocuments, telechargement,getDocumentAdmin,updateDocumentPublication };
