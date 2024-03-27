@@ -4,13 +4,16 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
+
 const stripe = require('stripe')('sk_test_51OuEfcRuWErPhnDe00PMhcbxFWXVZOd950QjBWk8JxnG4Z9n9A1XUuiQ82MMbM2cXisvmer8mPMVWmy7ocGE9d2300tIundsmy');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
 app.use(cors());
 app.use(bodyParser.json());
+
+
+
 
 mongoose.connect('mongodb://localhost:27017/Base', { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -33,6 +36,10 @@ const storage = multer.diskStorage({
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
   });
+
+
+
+
   app.use('/uploads', express.static('uploads'));
   
 // Configuration de multer pour stocker les fichiers téléchargés dans le dossier "uploads"
@@ -59,6 +66,7 @@ app.use('/api/participation', require('./routes/participations'));
 app.use('/api/session', require('./routes/sessions'));
 app.use('/api/documents', require('./routes/document'));
 app.use('/api/evenement', require('./routes/evenements'));
+
 
 
 
@@ -96,6 +104,8 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 });
 
+
+
 // Endpoint pour récupérer les paiements
 app.get('/payments', async (req, res) => {
   try {
@@ -107,6 +117,8 @@ app.get('/payments', async (req, res) => {
     res.status(500).json({ error: 'Une erreur est survenue lors de la récupération des paiements.' });
   }
 });
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

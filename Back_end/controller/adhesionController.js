@@ -1,10 +1,9 @@
 const Demande = require('../model/Demande');
 const User = require('../model/User');
-
 const express = require('express');
 const mongoose = require('mongoose');
 
-const ajout = async (req, res) => {
+const DemandeAdhesion = async (req, res) => {
   const { userId } = req.body;
 
   try {
@@ -12,6 +11,7 @@ const ajout = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ success: false, message: 'ID utilisateur invalide.' });
     }
+
 
     // Récupérer le nom de l'utilisateur associé à l'ID
     const user = await User.findById(userId);
@@ -53,18 +53,35 @@ const ajout = async (req, res) => {
 };
 
 
-  
 const getDemandes = async (req, res) => {
   try {
-    // Récupérer toutes les demandes depuis la base de données et peupler les informations de l'utilisateur
-    const demandes = await Demande.find().populate('user', 'username');
+    // Récupérer userId de la requête
+    const userId = req.query.userId;
+
+    // Vérifier si userId est présent dans la requête
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Identifiant utilisateur manquant dans la requête.' });
+    }
+
+    // Récupérer les demandes associées à l'utilisateur spécifié par userId
+    const demandes = await Demande.find({ user: userId }).populate('user', 'username');
 
     if (demandes.length === 0) {
-      // Aucune demande n'est trouvée, utiliser le contenu par défaut du message
+      // Aucune demande n'est trouvée pour cet utilisateur
       const defaultMessage = new Demande().message;
       res.status(200).json({ success: true, message: defaultMessage });
     } else {
-      res.status(200).json({ success: true, demandes });
+      // Vérifier s'il y a des demandes acceptées
+      const demandeAcceptee = demandes.some(demande => demande.accepte);
+
+      if (demandeAcceptee) {
+        // Au moins une demande a été acceptée, renvoyer la liste des demandes acceptées
+        const demandesAcceptees = demandes.filter(demande => demande.accepte);
+        res.status(200).json({ success: true, demandes: demandesAcceptees });
+      } else {
+        // Aucune demande n'a été acceptée, renvoyer la liste des demandes non acceptées
+        res.status(200).json({ success: true, demandes });
+      }
     }
   } catch (error) {
     console.error('Erreur lors de la récupération des demandes :', error);
@@ -72,7 +89,9 @@ const getDemandes = async (req, res) => {
   }
 };
 
+
   
+
   const accepterAdhesion = async (req, res) => {
     try {
         const userId = req.body.userId;
@@ -105,27 +124,25 @@ const getDemandes = async (req, res) => {
 };
 
 
-const getMessage = async (req, res) => {
+const getDemande = async (req, res) => {
   try {
-    // Récupérer la première demande depuis la base de données
-    const demande = await Demande.findOne();
+    // Récupérer toutes les demandes depuis la base de données et peupler les informations de l'utilisateur
+    const demandes = await Demande.find().populate('user', 'username');
 
-    // Vérifier si la demande existe
-    if (demande) {
-      // Récupérer le contenu du message
-      const message = demande.message;
-      console.log("contenu message :"+message);
-      res.status(200).json({ success: true, message });
+    if (demandes.length === 0) {
+      // Aucune demande n'est trouvée, utiliser le contenu par défaut du message
+      const defaultMessage = new Demande().message;
+      res.status(200).json({ success: true, message: defaultMessage });
     } else {
-      res.status(404).json({ success: false, message: 'Aucune demande trouvée.' });
+      res.status(200).json({ success: true, demandes });
     }
   } catch (error) {
-    console.error('Erreur lors de la récupération de la demande :', error);
-    res.status(500).json({ success: false, message: 'Erreur lors de la récupération de la demande.' });
+    console.error('Erreur lors de la récupération des demandes :', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des demandes.' });
   }
 };
 
 
   
-  module.exports = { ajout,getDemandes,accepterAdhesion,getMessage};
+  module.exports = { DemandeAdhesion,getDemandes,accepterAdhesion,getDemande};
   

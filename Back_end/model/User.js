@@ -8,6 +8,7 @@ const userSchema = new Schema({
     password: { type: String, required: true },
     roles: { type: [String], default: ['user'] }, // Ajout de 'user' comme rôle par défaut
     formations: { type: [Schema.Types.ObjectId], ref: 'Formation', default: [] },
+    sessions: [{ type: Schema.Types.ObjectId, ref: 'Session' }] // Référence à plusieurs sessions
 
 
 });

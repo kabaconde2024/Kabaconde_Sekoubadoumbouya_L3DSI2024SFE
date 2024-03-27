@@ -68,6 +68,8 @@ const login = async (req, res) => {
         res.status(500).json({ error: "Erreur serveur lors de la connexion" });
     }
 };
+
+
 const updateUserById = async (req, res) => {
     try {
         const { username, email,telephone } = req.body;
