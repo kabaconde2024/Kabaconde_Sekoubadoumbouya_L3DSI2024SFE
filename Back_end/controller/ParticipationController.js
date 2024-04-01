@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(bodyParser.json());
 const Formation = require('../model/Formation');
-const User = require('../model/User');
+const Session = require('../model/Session');
 
  // Assurez-vous que vous importez correctement le modèle "Formation"
 const Participation = require('../model/Participation');
@@ -15,9 +15,9 @@ const ajouterparticiaption = async (req, res) => {
     try {
         console.log('Requête POST reçue sur /participations', req.body);
 
-        const { user, formation } = req.body;
+        const { user, session } = req.body;
 
-        console.log('UserID et FormationID extraits de la requête :', user, formation);
+        console.log('UserID et FormationID extraits de la requête :', user, session);
 
         // Vérifiez si userId est défini
         if (!user) {
@@ -26,7 +26,7 @@ const ajouterparticiaption = async (req, res) => {
         }
 
         // Vérifiez si l'utilisateur a déjà participé à cette formation
-        const existingParticipation = await Participation.findOne({ user, formation });
+        const existingParticipation = await Participation.findOne({ user, session });
 
         if (existingParticipation) {
             console.log('L\'utilisateur a déjà participé à cette formation.');
@@ -34,7 +34,7 @@ const ajouterparticiaption = async (req, res) => {
         }
 
         // Créez une nouvelle participation
-        const newParticipation = new Participation({ user, formation });
+        const newParticipation = new Participation({ user, session });
 
         // Enregistrez la participation dans la base de données
         const savedParticipation = await newParticipation.save();
@@ -50,23 +50,36 @@ const ajouterparticiaption = async (req, res) => {
 
 
 
-
 const afficherparticipation = async (req, res) => {
-
     try {
+        const userId = req.params.id;
+        console.log('ID de l\'utilisateur dans la requête :', userId);
 
-        const userId = req.params.id     
-           console.log('ID de l\'utilisateur dans la requête :', userId);
-        const userFormations = await Participation.find({ user: userId }).populate('formation');
-        console.log('Participation de l\'utilisateur :', userFormations);
-        
+        // Recherchez les participations de l'utilisateur dans la collection Participation
+        const userParticipations = await Participation.find({ user: userId });
 
-        res.json(userFormations);
+        // Créez un tableau pour stocker les détails des sessions
+        let sessionDetails = [];
+
+        // Pour chaque participation de l'utilisateur, recherchez les détails de la session
+        for (let participation of userParticipations) {
+            // Recherchez les détails de la session à partir de l'identifiant de session
+            const session = await Session.findById(participation.session);
+            // Si la session est trouvée, ajoutez ses détails au tableau
+            if (session) {
+                sessionDetails.push(session);
+            }
+        }
+
+        console.log('Détails des sessions auxquelles l\'utilisateur est inscrit :', sessionDetails);
+
+        res.json(sessionDetails);
     } catch (error) {
-        console.error('Erreur lors de la récupération des formations de l\'utilisateur :', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des formations de l\'utilisateur.' });
+        console.error('Erreur lors de la récupération des sessions auxquelles l\'utilisateur est inscrit :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des sessions auxquelles l\'utilisateur est inscrit.' });
     }
 };
+
 
 
 

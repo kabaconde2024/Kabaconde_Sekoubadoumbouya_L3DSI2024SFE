@@ -11,4 +11,10 @@ const evenementschema = new mongoose.Schema({
 
 }, { collection: 'Evenement' }); // Utilisez 'Actualite' pour la collection
 
+<<<<<<< HEAD
 module.exports = mongoose.model('Evenement', evenementschema);
+=======
+module.exports = mongoose.model('Evenement', evenementschema);
+
+
+>>>>>>> 3a76e27eebbae7bf9d2699f72b8b22dfdae4fa03

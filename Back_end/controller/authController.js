@@ -1,10 +1,12 @@
 // authController.js
 const User = require('../model/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt");
 
 const register = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email,telephone } = req.body;
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await User.findOne({ email });
@@ -17,7 +19,8 @@ const register = async (req, res) => {
         const newUser = new User({
             username,
             email,
-            password: password.trim(), // Enregistrez le mot de passe brut ici
+            telephone,
+            password: hashedPassword, // Enregistrez le mot de passe brut ici
             formations: [],
         });
 
@@ -30,7 +33,6 @@ const register = async (req, res) => {
         res.status(500).json({ message: "Erreur lors de l'inscription." });
     }
 };
-
 
 const login = async (req, res) => {
     try {
@@ -45,15 +47,21 @@ const login = async (req, res) => {
         }
 
         // Recherche de l'utilisateur dans la base de données
-        const user = await User.findOne({ email, password });
+        const user = await User.findOne({ email });
 
-        // Vérification des identifiants de l'utilisateur
+        // Vérification si l'utilisateur existe
         if (!user) {
             return res.status(401).json({ error: 'Identifiants incorrects. Veuillez réessayer.' });
         }
 
+        // Vérification du mot de passe
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Identifiants incorrects. Veuillez réessayer.' });
+        }
+
         // Réponse de connexion réussie avec le rôle et l'ID de l'utilisateur
-        res.status(200).json({ roles: user.roles, userId: user._id, username: user.username, email:user.email, message: 'Connexion réussie.' });
+        res.status(200).json({ roles: user.roles, userId: user._id, username: user.username, email: user.email, message: 'Connexion réussie.' });
     } catch (error) {
         // Gestion des erreurs lors de la connexion
         console.error("Erreur lors de la connexion :", error);
@@ -61,13 +69,14 @@ const login = async (req, res) => {
     }
 };
 
+
 const updateUserById = async (req, res) => {
     try {
-        const { username, email } = req.body;
+        const { username, email,telephone } = req.body;
 
         const resultat = await User.updateOne(
             { _id: req.params.id },
-            { $set: { username, email } }
+            { $set: { username, email,telephone } }
         );
 
         if (resultat.nModified === 0) {

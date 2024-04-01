@@ -8,7 +8,8 @@ const Session = require('../model/Session');
 // Méthode pour créer une nouvelle formation
 const creerFormation = async (req, res) => {
     try {
-        const { titre, description, prix } = req.body;
+
+        const { titre, description, dateDebut, prix } = req.body;
 
         // Vérifier si la formation existe déjà
         const existingFormation = await Formation.findOne({ titre });
@@ -21,6 +22,8 @@ const creerFormation = async (req, res) => {
         const nouvelleFormation = new Formation({
             titre,
             description,
+
+            dateDebut,
             prix,
         });
 
@@ -69,6 +72,20 @@ const afficherFormations = async (req, res) => {
     }
   };
 
+  const  Afficher=async(req,res)=>{
+    try {
+        const formation = await Formation.findById(req.params.id);
+        if (!formation) {
+          return res.status(404).json({ message: 'Formation non trouvée' });
+        }
+        res.status(200).json({ formation });
+      } catch (error) {
+        console.error('Erreur lors de la récupération des détails de la formation :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des détails de la formation' });
+      }
+  }
+
+
   const afficherFormation = async (req, res) => {
     try {
         // Récupérer toutes les formations vérifiées de la base de données
@@ -86,7 +103,7 @@ const afficherFormations = async (req, res) => {
   const updateFormation = async (req, res) => {
     try {
         const { id } = req.params; // Récupérer l'ID à partir des paramètres de l'URL
-        const { titre, description, dateDebut, dateFin, prix } = req.body;
+        const { titre, description, dateDebut, prix } = req.body;
 
         // Vérifier si la formation existe
         const existingFormation = await Formation.findById(id);
@@ -99,7 +116,6 @@ const afficherFormations = async (req, res) => {
         existingFormation.titre = titre || existingFormation.titre;
         existingFormation.description = description || existingFormation.description;
         existingFormation.dateDebut = dateDebut || existingFormation.dateDebut;
-        existingFormation.dateFin = dateFin || existingFormation.dateFin;
         existingFormation.prix = prix || existingFormation.prix;
 
         // Sauvegarder les modifications dans la base de données
@@ -216,4 +232,5 @@ module.exports = {
     accepterFormation,
     formationsByFormateur,
     recupererSessionsFormation,
+    Afficher,
 }
