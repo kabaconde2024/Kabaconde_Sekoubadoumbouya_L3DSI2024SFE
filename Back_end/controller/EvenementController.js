@@ -1,51 +1,113 @@
-const express = require('express');
 const Evenement = require('../model/Evenement');
-const path = require('path');
-const fs = require('fs');
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
-const ajouterEvenement = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Aucun fichier téléchargé.' });
-        }
+const ajoutEvenement = async (req, res) => {
+  try {
+    console.log("Requête reçue :", req.body);
 
-        // Générer un nom de fichier unique
-        const fileName = `${Date.now()}_${req.file.originalname}`;
+    // Récupérez les données du corps de la requête
+    const eventData = req.body;
 
-        // Utilisez le nom généré pour stocker le fichier dans le dossier
-        const filePath = path.join(__dirname, '..', 'events', fileName); // Utilisation de path.join pour définir le chemin du fichier
-        await fs.promises.rename(req.file.path, filePath); // Utilisation de req.file.path pour obtenir le chemin du fichier téléchargé
-
-        // Enregistrez l'événement dans la base de données avec le nom du fichier généré
-        const nouvelEvenement = new Evenement({
-            titre: req.body.titre,
-            datePub: req.body.datePub,
-            description: req.body.description,
-            image: fileName,
-        });
-
-        const savedEvent = await nouvelEvenement.save();
-
-        res.status(201).json(savedEvent);
-    } catch (error) {
-        console.error('Erreur lors de l\'ajout de l\'événement :', error.message);
-        res.status(500).json({ message: 'Erreur lors de l\'ajout de l\'événement.' });
+    // Vérifiez si le fichier image a bien été téléchargé
+    if (!req.file) {
+      console.log("Image non téléchargée");
+      return res.status(400).json({ message: 'Veuillez télécharger une image.' });
     }
-};
 
-const recupererEvenements = async (req, res) => {
-    try {
-        const tousLesEvenements = await Evenement.find();
+    // Ajoutez le nom du fichier d'image aux données
+    eventData.image = req.file.filename;
 
-        // Envoyer les événements récupérés en réponse
-        res.status(200).json(tousLesEvenements);
-    } catch (error) {
-        console.error('Erreur lors de la récupération des événements :', error.message);
-        res.status(500).json({ error: 'Erreur lors de la récupération des événements' });
+    // Créez une nouvelle instance de modèle avec les données
+    const newEvenement = new Evenement(eventData);
+
+    // Validation du modèle MongoDB
+    const validationError = newEvenement.validateSync();
+
+    if (validationError) {
+      console.log("Erreur de validation :", validationError.message);
+      return res.status(400).json({ message: validationError.message });
     }
+
+    // Enregistrez l'événement dans la base de données
+    const savedEvenement = await newEvenement.save();
+    console.log("Événement enregistré :", savedEvenement);
+
+    res.json(savedEvenement);
+  } catch (error) {
+    console.error("Erreur lors du traitement :", error);
+    res.status(500).json({ message: error.message });
+  }
 };
 
-module.exports = {
-    ajouterEvenement,
-    recupererEvenements,
-};
+
+const getEvenement = async (req, res) => {
+    try {
+      // Récupérez la liste des événements
+      const evenements = await Evenement.find();
+      res.json(evenements);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des événements :", error);
+      res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des événements.' });
+    }
+  };
+
+  const supprimerEvenement = async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      // Vérifiez si l'ID est valide
+      if (!id) {
+        return res.status(400).json({ message: 'ID d\'événement invalide.' });
+      }
+  
+      // Supprimez l'événement de la base de données
+      const result = await Evenement.deleteOne({ _id: id });
+  
+      // Vérifiez si l'événement a été supprimé avec succès
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: 'Événement non trouvé.' });
+      }
+  
+      // Répondre avec succès
+      res.status(200).json({ message: 'Événement supprimé avec succès.' });
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'événement :', error);
+      res.status(500).json({ message: 'Une erreur est survenue lors de la suppression de l\'événement.' });
+    }
+  };
+  const modifierEvenement = async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      // Vérifiez si l'ID est valide
+      if (!id) {
+        return res.status(400).json({ message: 'ID d\'événement invalide.' });
+      }
+  
+      // Vérifiez si l'événement existe
+      const evenement = await Evenement.findById(id);
+      if (!evenement) {
+        return res.status(404).json({ message: 'Événement non trouvé.' });
+      }
+  
+      // Mettre à jour les champs de l'événement
+      evenement.titre = req.body.titre || evenement.titre;
+      evenement.description = req.body.description || evenement.description;
+      evenement.date = req.body.date || evenement.date;
+      evenement.image = req.file ? req.file.filename : evenement.image; // Vérifiez si req.file est défini
+  
+      // Enregistrer les modifications dans la base de données
+      await evenement.save();
+  
+      // Répondre avec succès
+      res.status(200).json({ message: 'Événement modifié avec succès.' });
+    } catch (error) {
+      console.error('Erreur lors de la modification de l\'événement :', error);
+      res.status(500).json({ message: 'Une erreur est survenue lors de la modification de l\'événement.' });
+    }
+  };
+  
+  
+module.exports = { ajoutEvenement,getEvenement,supprimerEvenement,modifierEvenement };

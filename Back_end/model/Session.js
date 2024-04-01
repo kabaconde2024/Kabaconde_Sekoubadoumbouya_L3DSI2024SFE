@@ -7,5 +7,7 @@ const sessionSchema = new Schema({
     dateFin: { type: Date, required: true },
     lieu: { type: String, required: true },
     capacite: { type: Number, required: true },
+    userSession:{type: Schema.Types.ObjectId, ref: 'User' },
+
 });
 module.exports = mongoose.model('Session', sessionSchema);
