@@ -14,6 +14,28 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+
+
+const getUserById = async (req, res) => {
+    try {
+        const userId = req.params.userId; // Récupérer l'ID de l'utilisateur à partir des paramètres de la requête
+
+        // Rechercher l'utilisateur dans la base de données par son ID
+        const user = await User.findById(userId);
+
+        // Vérifier si l'utilisateur existe
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        // Envoyer les détails de l'utilisateur en tant que réponse
+        res.status(200).json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de la récupération des détails de l'utilisateur." });
+    }
+};
+
 // Supprimer un utilisateur par ID
 const deleteUserById = async (req, res) => {
     try {
@@ -56,5 +78,6 @@ module.exports = {
     getAllUsers,
     deleteUserById,
     updateUserById,
+    getUserById,
     
 };

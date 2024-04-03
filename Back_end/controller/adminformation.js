@@ -171,7 +171,6 @@ const accepterFormation = async (req, res) => {
     }
 };
 
-
 const formationsByFormateur = async (req, res) => {
     try {
         const formateurId = req.params.id;
@@ -195,14 +194,20 @@ const recupererSessionsFormation = async (req, res) => {
         const formationId = req.params.formationId;
 
         // Recherchez la formation dans la base de données en utilisant son ID
-        const formation = await Formation.findById(formationId).populate('sessions');
+        const formation = await Formation.findById(formationId).populate({
+            path: 'sessions',
+            populate: {
+                path: 'user',
+                model: 'User'
+            }
+        });
 
         // Vérifiez si la formation existe
         if (!formation) {
             return res.status(404).json({ message: 'Formation non trouvée' });
         }
 
-        // Récupérez les sessions de la formation
+        // Récupérez les sessions de la formation avec les détails de l'utilisateur
         const sessionsFormation = formation.sessions;
 
         res.status(200).json({ sessionsFormation });
@@ -211,7 +216,6 @@ const recupererSessionsFormation = async (req, res) => {
         res.status(500).json({ error: 'Erreur lors de la récupération des sessions de la formation' });
     }
 };
-
 
 module.exports = {
     creerFormation,
