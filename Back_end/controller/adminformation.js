@@ -8,6 +8,7 @@ const Session = require('../model/Session');
 // Méthode pour créer une nouvelle formation
 const creerFormation = async (req, res) => {
     try {
+
         const { titre, description, dateDebut, prix } = req.body;
 
         // Vérifier si la formation existe déjà
@@ -21,6 +22,7 @@ const creerFormation = async (req, res) => {
         const nouvelleFormation = new Formation({
             titre,
             description,
+
             dateDebut,
             prix,
         });
@@ -197,8 +199,13 @@ const recupererSessionsFormation = async (req, res) => {
         const formation = await Formation.findById(formationId).populate({
             path: 'sessions',
             populate: {
+
                 path: 'user',
-                model: 'User'
+                model: 'User',
+
+                path: 'userSession', // Nom du champ référençant l'utilisateur dans la session
+                select: 'username', // Sélectionnez uniquement le nom d'utilisateur
+ 
             }
         });
 
@@ -216,6 +223,9 @@ const recupererSessionsFormation = async (req, res) => {
         res.status(500).json({ error: 'Erreur lors de la récupération des sessions de la formation' });
     }
 };
+
+
+
 
 module.exports = {
     creerFormation,

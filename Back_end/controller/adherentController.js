@@ -1,5 +1,6 @@
 const User = require('../model/User');
 const jwt = require('jsonwebtoken');
+const Session = require('../model/Session');
 
 
 // Obtenir la liste de tous les utilisateurs
@@ -39,16 +40,20 @@ const getUserById = async (req, res) => {
 // Supprimer un utilisateur par ID
 const deleteUserById = async (req, res) => {
     try {
-        const resultat = await User.deleteOne({ _id: req.params.id });
+        // Supprimer l'utilisateur
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
 
-        if (resultat.deletedCount === 0) {
+        if (!deletedUser) {
             return res.status(404).json({ message: "Utilisateur non trouvé." });
         }
 
-        res.status(200).json({ message: 'Utilisateur supprimé avec succès.' });
-    } catch (erreur) {
-        console.error(erreur);
-        res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur." });
+        // Supprimer toutes les sessions associées à cet utilisateur
+        await Session.deleteMany({ userId: req.params.userId });
+
+        res.status(200).json({ message: 'Utilisateur et sessions associées supprimés avec succès.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur et des sessions associées." });
     }
 };
 

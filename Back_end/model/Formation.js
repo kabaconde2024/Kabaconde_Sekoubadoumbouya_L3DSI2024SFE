@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const formationSchema = new Schema({
     titre: { type: String, required: true },
+    description: { type: String, required: true }, 
     description: { type: String, required: true },
     dateDebut: { type: String, required: true }, 
     prix: { type: Number, required: true },

@@ -4,8 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
+const stripe = require('stripe')('sk_test_51OuEfnCqxrSciSMnnyaaPwvGLxW4BdkIF2UdBwBrbEe92KYXfrFww2qwD1rzWW1e3WyJbEzFnnOA9afgPcpLoLr700WrDYu5HF');
+const demandeAdehesion = require('./routes/demandeAdehesion');
 
-const stripe = require('stripe')('sk_test_51OuEfcRuWErPhnDe00PMhcbxFWXVZOd950QjBWk8JxnG4Z9n9A1XUuiQ82MMbM2cXisvmer8mPMVWmy7ocGE9d2300tIundsmy');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -66,6 +67,10 @@ app.use('/api/participation', require('./routes/participations'));
 app.use('/api/session', require('./routes/sessions'));
 app.use('/api/documents', require('./routes/document'));
 app.use('/api/evenement', require('./routes/evenements'));
+
+app.use('/api/demandeAdehesion', require('./routes/demandeAdehesion'));
+
+
 
 
 
