@@ -37,6 +37,7 @@ const getUserById = async (req, res) => {
     }
 };
 
+
 // Supprimer un utilisateur par ID
 const deleteUserById = async (req, res) => {
     try {
@@ -56,6 +57,9 @@ const deleteUserById = async (req, res) => {
         res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur et des sessions associées." });
     }
 };
+
+
+
 
 const updateUserById = async (req, res) => {
     try {

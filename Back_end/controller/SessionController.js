@@ -90,7 +90,7 @@ const updateSession = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la mise à jour de la session.' });
     }
 };
-
+/*
 const deleteSessionById = async (req, res) => {
     try {
         // Trouver la session à supprimer
@@ -140,6 +140,63 @@ const deleteSessionById = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la suppression de la session.' });
     }
 };
+
+*/
+
+
+const deleteSessionById = async (req, res) => {
+    try {
+        // Trouver la session à supprimer
+        const session = await Sessions.findOne({ _id: req.params.id });
+        
+        // Vérifier si la session existe
+        if (!session) {
+            return res.status(404).json({ message: 'Session non trouvée.' });
+        }
+
+        // Récupérer l'ID de l'utilisateur affecté à la session
+        const userId = session.userSession;
+
+        // Trouver toutes les sessions de l'utilisateur
+        const userSessions = await Sessions.find({ userSession: userId });
+
+        // Supprimer la session
+        const resultat = await Sessions.deleteOne({ _id: req.params.id });
+
+        if (resultat.deletedCount === 0) {
+            return res.status(404).json({ message: 'Session non trouvée.' });
+        }
+
+        // Trouver l'utilisateur affecté à la session
+        const user = await Users.findOne({ _id: userId });
+
+        // Vérifier si l'utilisateur existe
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+        }
+
+        // Supprimer la référence à la session dans le modèle de l'utilisateur
+        user.sessionformateur = user.sessionformateur.filter(sessionId => sessionId.toString() !== req.params.id);
+
+        // Vérifier si l'utilisateur a d'autres sessions
+        if (userSessions.length === 1) {
+            // Si l'utilisateur n'a qu'une seule session, supprimer le rôle de formateur
+            user.roles = user.roles.filter(role => role !== 'formateur');
+        }
+
+        // Enregistrer les modifications apportées à l'utilisateur
+        await user.save();
+
+        // Supprimer la référence à la session dans la collection Formation
+        await Formation.updateMany({ sessions: req.params.id }, { $pull: { sessions: req.params.id } });
+
+        res.status(200).json({ message: 'Session supprimée avec succès.' });
+    } catch (erreur) {
+        console.error(erreur);
+        res.status(500).json({ message: 'Erreur lors de la suppression de la session.' });
+    }
+};
+
 
 
 const afficherDetailsSession = async (req, res) => {

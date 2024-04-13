@@ -127,7 +127,7 @@ const afficherFormations = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la mise à jour de la formation.' });
     }
 };
-
+/*
 const deleteFormationById = async (req, res) => {
     try {
         const resultat = await Formation.deleteOne({ _id: req.params.id });
@@ -142,6 +142,54 @@ const deleteFormationById = async (req, res) => {
         res.status(500).json({ message: "Erreur lors de la suppression de la formation." });
     }
 };
+*/
+const deleteFormationById = async (req, res) => {
+    try {
+        // Trouver la formation à supprimer
+        const formation = await Formation.findOne({ _id: req.params.id });
+
+        // Vérifier si la formation existe
+        if (!formation) {
+            return res.status(404).json({ message: "Formation non trouvée." });
+        }
+
+        // Supprimer toutes les sessions associées à la formation
+        await Session.deleteMany({ _id: { $in: formation.sessions } });
+
+        // Supprimer les références à la formation dans les sessions
+        await Session.updateMany({ formation: req.params.id }, { $unset: { formation: 1 } });
+
+        // Supprimer les références à la formation dans la collection User
+        await User.updateMany({ sessionformateur: { $in: formation.sessions } }, { $pull: { sessionformateur: { $in: formation.sessions } } });
+
+        // Supprimer la formation
+        const resultat = await Formation.deleteOne({ _id: req.params.id });
+
+        if (resultat.deletedCount === 0) {
+            return res.status(404).json({ message: "Formation non trouvée." });
+        }
+
+        // Mise à jour des utilisateurs pour supprimer le rôle de formateur s'ils n'ont plus de sessions
+        const userSessions = await Session.find({ userSession: { $in: formation.sessions } });
+        for (const session of userSessions) {
+            const user = await User.findOne({ _id: session.userSession });
+            if (!user) continue;
+        
+            const userSessionsCount = await Session.countDocuments({ userSession: user._id });
+            if (userSessionsCount === 0) {
+                user.roles = user.roles.filter(role => role !== 'formateur');
+                await user.save();
+            }
+        }
+
+        res.status(200).json({ message: 'Formation supprimée avec succès.' });
+    } catch (erreur) {
+        console.error(erreur);
+        res.status(500).json({ message: "Erreur lors de la suppression de la formation." });
+    }
+};
+
+
 
 const accepterFormation = async (req, res) => {
     try {
