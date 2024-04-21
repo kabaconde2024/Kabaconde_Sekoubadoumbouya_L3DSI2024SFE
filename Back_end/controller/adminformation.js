@@ -9,7 +9,7 @@ const Session = require('../model/Session');
 const creerFormation = async (req, res) => {
     try {
 
-        const { titre, description, dateDebut, prix } = req.body;
+        const { titre, description, duree, prix } = req.body;
 
         // Vérifier si la formation existe déjà
         const existingFormation = await Formation.findOne({ titre });
@@ -22,8 +22,7 @@ const creerFormation = async (req, res) => {
         const nouvelleFormation = new Formation({
             titre,
             description,
-
-            dateDebut,
+            duree,
             prix,
         });
 

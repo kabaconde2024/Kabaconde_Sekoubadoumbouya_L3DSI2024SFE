@@ -7,6 +7,7 @@ const sessionSchema = new Schema({
     dateFin: { type: String, required: true },
     lieu: { type: String, required: true },
     capacite: { type: Number, required: true },
+    remarque: { type: String, required: true },
     userSession:{type: Schema.Types.ObjectId, ref: 'User' },
 
 

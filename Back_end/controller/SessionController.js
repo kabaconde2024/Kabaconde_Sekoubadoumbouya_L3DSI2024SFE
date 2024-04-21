@@ -7,7 +7,7 @@ const Users = require('../model/User');
 
 const creerSession = async (req, res) => {
     try {
-        const { formation, dateDebut, dateFin, lieu, capacite, userSession } = req.body;
+        const { formation, dateDebut, dateFin, lieu, capacite, remarque,userSession } = req.body;
 
         // Créer une nouvelle session
         const nouvelleSession = new Sessions({
@@ -16,6 +16,7 @@ const creerSession = async (req, res) => {
             dateFin,
             lieu,
             capacite,
+            remarque,
             userSession,
         });
 

@@ -5,6 +5,7 @@ const app = express();
 app.use(bodyParser.json());
 const Formation = require('../model/Formation');
 const Session = require('../model/Session');
+const User  = require('../model/User');
 
  // Assurez-vous que vous importez correctement le modèle "Formation"
 const Participation = require('../model/Participation');
@@ -81,7 +82,24 @@ const afficherparticipation = async (req, res) => {
 };
 
 
+const afficherToutesParticipations = async (req, res) => {
+    try {
+        // Recherchez toutes les participations dans la collection Participation
+        const participations = await Participation.find()
+            .populate({
+                path: 'session',
+                populate: { path: 'formation' } // Populate les détails de la formation associée à chaque session
+            })
+            .populate('user'); // Populate les détails de l'utilisateur associé à chaque participation
+
+        // Envoyez les participations trouvées en réponse
+        res.json(participations);
+    } catch (error) {
+        console.error('Erreur lors de la récupération de toutes les participations :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération de toutes les participations.' });
+    }
+};
 
 
 
-module.exports = { afficherparticipation ,ajouterparticiaption};
+module.exports = { afficherparticipation ,ajouterparticiaption,afficherToutesParticipations};

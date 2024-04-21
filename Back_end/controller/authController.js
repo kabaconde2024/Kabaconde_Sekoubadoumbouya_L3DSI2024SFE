@@ -62,6 +62,7 @@ const login = async (req, res) => {
 
         // Réponse de connexion réussie avec le rôle et l'ID de l'utilisateur
         res.status(200).json({ roles: user.roles, userId: user._id, username: user.username, email: user.email, message: 'Connexion réussie.' });
+        console.log('userId:', user._id);
     } catch (error) {
         // Gestion des erreurs lors de la connexion
         console.error("Erreur lors de la connexion :", error);
