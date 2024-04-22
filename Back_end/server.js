@@ -80,7 +80,7 @@ app.post('/api/images/uploadImage/:userId', upload.single('image'), (req, res) =
     try {
       // Le fichier est enregistré avec succès, vous pouvez faire quelque chose avec req.file
       console.log('Image téléchargée avec succès:', req.file);
-console.log("Bienvenue dans la page server.js");
+      console.log("Bienvenue dans la page server.js");
       // Construisez l'URL complète de l'image sur votre serveur
       const imageURL = `http://localhost:5000/uploads/${req.file.filename}`;
 
