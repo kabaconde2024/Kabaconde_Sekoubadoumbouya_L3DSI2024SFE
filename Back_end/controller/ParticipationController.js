@@ -5,6 +5,7 @@ const app = express();
 app.use(bodyParser.json());
 const Formation = require('../model/Formation');
 const Session = require('../model/Session');
+const User  = require('../model/User');
 
  // Assurez-vous que vous importez correctement le modèle "Formation"
 const Participation = require('../model/Participation');
@@ -81,7 +82,56 @@ const afficherparticipation = async (req, res) => {
 };
 
 
+const afficherToutesParticipations = async (req, res) => {
+    try {
+        // Recherchez toutes les participations dans la collection Participation
+        const participations = await Participation.find()
+            .populate({
+                path: 'session',
+                populate: { path: 'formation' } // Populate les détails de la formation associée à chaque session
+            })
+            .populate('user'); // Populate les détails de l'utilisateur associé à chaque participation
+
+        // Envoyez les participations trouvées en réponse
+        res.json(participations);
+    } catch (error) {
+        console.error('Erreur lors de la récupération de toutes les participations :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération de toutes les participations.' });
+    }
+};
 
 
+const updatedParticipation = async (req, res) => {
+    const { id } = req.params;
+    const { etat } = req.body;
+    console.log('Nouvel état reçu dans la requête :', etat);
 
-module.exports = { afficherparticipation ,ajouterparticiaption};
+
+    try {
+        console.log('ID de la participation à mettre à jour :', id);
+        console.log('Nouvel état reçu dans la requête :', etat);
+
+        const updatedParticipation = await Participation.findOneAndUpdate(
+            { _id: id },
+            { $set: { etat: etat } },
+            { new: true } // Renvoie la participation mise à jour
+        );
+
+        console.log('Participation mise à jour :', updatedParticipation);
+
+        if (!updatedParticipation) {
+            console.log('Participation non trouvée.');
+            return res.status(404).json({ message: 'Participation not found' });
+        }
+
+        // Répondre avec la participation mise à jour
+        res.json(updatedParticipation);
+    } catch (error) {
+        console.error('Error updating participation state:', error);
+        res.status(500).json({ message: 'An error occurred while updating participation state' });
+    }
+};
+
+  
+
+module.exports = { afficherparticipation ,ajouterparticiaption,afficherToutesParticipations,updatedParticipation};

@@ -6,7 +6,18 @@ const Session = require('../model/Session');
 // Obtenir la liste de tous les utilisateurs
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.find(); // Filtrer les utilisateurs par le rôle "formateur"
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de la récupération des utilisateurs." });
+    }
+};
+
+const getFormateur = async (req, res) => {
+    try {
+        const users = await User.find({ roles: 'formateur' }); // Filtrer les utilisateurs par le rôle "formateur"
 
         res.status(200).json(users);
     } catch (error) {
@@ -88,5 +99,6 @@ module.exports = {
     deleteUserById,
     updateUserById,
     getUserById,
+    getFormateur,
     
 };

@@ -12,6 +12,13 @@ const participationSchema = new mongoose.Schema({
         ref: 'Session',
         required: true,
     },
+
+    etat: {
+        type: String,
+        enum: ["En attente", "Partiel", "Total","Rembourse"],
+        default: "En attente" // Par défaut, le statut est "Enattente"
+    },
+
 });
 
 const Participation = mongoose.model('Participation', participationSchema);
