@@ -101,5 +101,37 @@ const afficherToutesParticipations = async (req, res) => {
 };
 
 
+const updatedParticipation = async (req, res) => {
+    const { id } = req.params;
+    const { etat } = req.body;
+    console.log('Nouvel état reçu dans la requête :', etat);
 
-module.exports = { afficherparticipation ,ajouterparticiaption,afficherToutesParticipations};
+
+    try {
+        console.log('ID de la participation à mettre à jour :', id);
+        console.log('Nouvel état reçu dans la requête :', etat);
+
+        const updatedParticipation = await Participation.findOneAndUpdate(
+            { _id: id },
+            { $set: { etat: etat } },
+            { new: true } // Renvoie la participation mise à jour
+        );
+
+        console.log('Participation mise à jour :', updatedParticipation);
+
+        if (!updatedParticipation) {
+            console.log('Participation non trouvée.');
+            return res.status(404).json({ message: 'Participation not found' });
+        }
+
+        // Répondre avec la participation mise à jour
+        res.json(updatedParticipation);
+    } catch (error) {
+        console.error('Error updating participation state:', error);
+        res.status(500).json({ message: 'An error occurred while updating participation state' });
+    }
+};
+
+  
+
+module.exports = { afficherparticipation ,ajouterparticiaption,afficherToutesParticipations,updatedParticipation};
