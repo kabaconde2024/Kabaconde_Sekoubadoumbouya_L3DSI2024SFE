@@ -89,7 +89,6 @@ const getDemandes = async (req, res) => {
   }
 };
 
-
   
 
   const accepterAdhesion = async (req, res) => {
@@ -151,7 +150,45 @@ router.get('/historique', async (req, res) => {
   }
 });
 
+const getDemandesByUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Récupérer les demandes de l'utilisateur spécifié depuis la base de données et peupler les informations de l'utilisateur
+    const demandes = await Demande.find({ user: userId }).populate('user', 'username');
+
+    if (demandes.length === 0) {
+      // Aucune demande n'est trouvée pour cet utilisateur
+      res.status(404).json({ success: false, message: 'Aucune demande trouvée pour cet utilisateur.' });
+    } else {
+      res.status(200).json({ success: true, demandes });
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des demandes de l\'utilisateur :', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des demandes de l\'utilisateur.' });
+  }
+};
+
+
+
+const supprimerDemande= async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Supprimer la demande d'adhésion correspondante dans la base de données
+    await Demande.findOneAndDelete({ user: userId });
+
+    // Répondre avec un statut 200 pour indiquer que la demande a été supprimée avec succès
+    res.status(200).json({ message: 'Demande d\'adhésion supprimée avec succès.' });
+  } catch (error) {
+    // En cas d'erreur, répondre avec un statut 500 et un message d'erreur
+    console.error('Erreur lors de la suppression de la demande d\'adhésion :', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression de la demande d\'adhésion.' });
+  }
+};
+
+
 
   
-  module.exports = { DemandeAdhesion,getDemandes,accepterAdhesion,getDemande};
+  module.exports = { DemandeAdhesion,supprimerDemande,getDemandes,accepterAdhesion,getDemande,getDemandesByUser};
   

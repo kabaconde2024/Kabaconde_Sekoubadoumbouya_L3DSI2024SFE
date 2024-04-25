@@ -9,7 +9,7 @@ const Session = require('../model/Session');
 const creerFormation = async (req, res) => {
     try {
 
-        const { titre, description, duree, prix } = req.body;
+        const { titre, description, duree } = req.body;
 
         // Vérifier si la formation existe déjà
         const existingFormation = await Formation.findOne({ titre });
@@ -23,7 +23,7 @@ const creerFormation = async (req, res) => {
             titre,
             description,
             duree,
-            prix,
+            
         });
 
         // Sauvegarder la formation dans la base de données
@@ -102,7 +102,7 @@ const afficherFormations = async (req, res) => {
   const updateFormation = async (req, res) => {
     try {
         const { id } = req.params; // Récupérer l'ID à partir des paramètres de l'URL
-        const { titre, description, dateDebut, prix } = req.body;
+        const { titre, description, duree } = req.body;
 
         // Vérifier si la formation existe
         const existingFormation = await Formation.findById(id);
@@ -114,8 +114,7 @@ const afficherFormations = async (req, res) => {
         // Mettre à jour les propriétés de la formation
         existingFormation.titre = titre || existingFormation.titre;
         existingFormation.description = description || existingFormation.description;
-        existingFormation.dateDebut = dateDebut || existingFormation.dateDebut;
-        existingFormation.prix = prix || existingFormation.prix;
+        existingFormation.duree = duree || existingFormation.duree;
 
         // Sauvegarder les modifications dans la base de données
         await existingFormation.save();
