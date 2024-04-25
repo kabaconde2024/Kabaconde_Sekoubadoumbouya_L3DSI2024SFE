@@ -141,6 +141,15 @@ const getDemande = async (req, res) => {
     res.status(500).json({ success: false, message: 'Erreur lors de la récupération des demandes.' });
   }
 };
+router.get('/historique', async (req, res) => {
+  try {
+    const historique = await getDemande();
+    res.json(historique);
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'historique des demandes :', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération de l\'historique des demandes.' });
+  }
+});
 
 
   
