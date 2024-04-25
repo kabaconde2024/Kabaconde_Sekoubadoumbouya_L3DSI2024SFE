@@ -6,6 +6,11 @@ const documentSchema = new Schema({
     date:{type:String,required:true},
     description: { type: String, required: true },
     publication: { type: Boolean, required: true ,default:false},
+    type: {
+        type: String,
+        enum: ["actualite", "avis", "reglement"],
+        default: "actualite" // Par défaut, le statut est "Enattente"
+    },
 
     
 });

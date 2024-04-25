@@ -7,7 +7,7 @@ const Users = require('../model/User');
 
 const creerSession = async (req, res) => {
     try {
-        const { formation, dateDebut, dateFin, lieu, capacite, remarque,userSession } = req.body;
+        const { formation, dateDebut, dateFin, lieu, capacite, prix,remarque,userSession } = req.body;
 
         // Créer une nouvelle session
         const nouvelleSession = new Sessions({
@@ -16,6 +16,7 @@ const creerSession = async (req, res) => {
             dateFin,
             lieu,
             capacite,
+            prix,
             remarque,
             userSession,
         });
@@ -64,7 +65,7 @@ const afficherSessions = async (req, res) => {
 const updateSession = async (req, res) => {
     try {
         const { id } = req.params; // Récupérer l'ID à partir des paramètres de l'URL
-        const { dateDebut, dateFin, lieu, formateur, capacite,userSession } = req.body;
+        const { dateDebut, dateFin, lieu, formateur, capacite,prix,userSession } = req.body;
 
         // Vérifier si la session existe
         const existingSession = await Sessions.findById(id);
@@ -79,6 +80,7 @@ const updateSession = async (req, res) => {
         existingSession.lieu = lieu || existingSession.lieu;
         existingSession.formateur = formateur || existingSession.formateur;
         existingSession.capacite = capacite || existingSession.capacite;
+        existingSession.prix = prix || existingSession.prix;
         existingSession.userSession = userSession || existingSession.userSession;
         
 

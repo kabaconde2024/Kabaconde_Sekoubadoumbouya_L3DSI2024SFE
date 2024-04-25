@@ -21,6 +21,8 @@ const ajoutDocument = async (req, res) => {
       date: req.body.date,
       path: fileName,
       description: req.body.description,
+      type: req.body.type // Ajout du type du document
+
     });
 
     const savedDocument = await newDocument.save();
@@ -91,6 +93,65 @@ const getDocumentAdmin = async (req, res) => {
   }
 };
 
+
+
+      const modifierDocument = async (req, res) => {
+        const { id } = req.params;
+
+        try {
+          // Vérifiez si l'ID est valide
+          if (!id) {
+            return res.status(400).json({ message: 'ID d\'événement invalide.' });
+          }
+
+          // Vérifiez si l'événement existe
+          const documents = await Document.findById(id);
+          if (!documents) {
+            return res.status(404).json({ message: 'Événement non trouvé.' });
+          }
+          
+          // Mettre à jour les champs de l'événement
+          documents.date = req.body.date || documents.date;
+          documents.description = req.body.description || documents.description;
+          documents.publication = req.body.publication || documents.publication; // Vérifiez si req.file est défini
+
+          // Enregistrer les modifications dans la base de données
+          await documents.save();
+
+          // Répondre avec succès
+          res.status(200).json({ message: 'Événement modifié avec succès.' });
+        } catch (error) {
+          console.error('Erreur lors de la modification de l\'événement :', error);
+          res.status(500).json({ message: 'Une erreur est survenue lors de la modification de l\'événement.' });
+        }
+      };
+
+
+const supprimerDocument = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Vérifiez si l'ID est valide
+    if (!id) {
+      return res.status(400).json({ message: 'ID d\'événement invalide.' });
+    }
+
+    // Supprimez l'événement de la base de données
+    const result = await Document.deleteOne({ _id: id });
+
+    // Vérifiez si l'événement a été supprimé avec succès
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Document non trouvé.' });
+    }
+
+    // Répondre avec succès
+    res.status(200).json({ message: 'Document supprimé avec succès.' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'événement :', error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la suppression de l\'événement.' });
+  }
+};
+
 const updateDocumentPublication = async (req, res) => {
   try {
     const documentId = req.params.id;
@@ -117,4 +178,5 @@ const updateDocumentPublication = async (req, res) => {
   }
 };
 
-module.exports = { ajoutDocument, getDocuments, telechargement,getDocumentAdmin,updateDocumentPublication };
+
+module.exports = { ajoutDocument, updateDocumentPublication,supprimerDocument,getDocuments, telechargement,getDocumentAdmin,modifierDocument };

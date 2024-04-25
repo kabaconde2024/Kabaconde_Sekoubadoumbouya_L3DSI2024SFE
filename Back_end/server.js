@@ -41,6 +41,7 @@ const storage = multer.diskStorage({
 
 
 
+
   app.use('/uploads', express.static('uploads'));
   
 // Configuration de multer pour stocker les fichiers téléchargés dans le dossier "uploads"
@@ -67,6 +68,7 @@ app.use('/api/participation', require('./routes/participations'));
 app.use('/api/session', require('./routes/sessions'));
 app.use('/api/documents', require('./routes/document'));
 app.use('/api/evenement', require('./routes/evenements'));
+app.use('/api/payement', require('./routes/payement'));
 
 app.use('/api/demandeAdehesion', require('./routes/demandeAdehesion'));
 
