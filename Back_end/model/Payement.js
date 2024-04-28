@@ -15,8 +15,18 @@ const paymentSchema = new Schema({
     enum: ['Carte de crédit', 'PayPal', 'Virement bancaire'],
     required: true
   },
- 
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  session: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Session',
+    required: true,
+  },
 });
+
 
 
 

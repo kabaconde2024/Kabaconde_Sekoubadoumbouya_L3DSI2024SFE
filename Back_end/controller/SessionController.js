@@ -241,6 +241,30 @@ const sessionsFormateur = async (req, res) => {
     }
 };
 
+
+const updateSessionPrice = async (req, res) => {
+    const { sessionId } = req.params;
+    const { prix } = req.body;
+  
+    try {
+      // Recherche de la session dans la base de données
+      let session = await Sessions.findById(sessionId);
+  
+      if (!session) {
+        return res.status(404).json({ message: 'Session non trouvée.' });
+      }
+  
+      // Mise à jour du prix de la session
+      session.prix = prix;
+      await session.save();
+  
+      return res.status(200).json({ message: 'Prix de la session mis à jour avec succès.', session });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du prix de la session :', error.message);
+      return res.status(500).json({ message: 'Une erreur s\'est produite lors de la mise à jour du prix de la session.' });
+    }
+  };
+
 module.exports = {
     creerSession,
     afficherSessions,
@@ -248,4 +272,5 @@ module.exports = {
     deleteSessionById,
     afficherDetailsSession,
     sessionsFormateur,
+    updateSessionPrice,
 };
