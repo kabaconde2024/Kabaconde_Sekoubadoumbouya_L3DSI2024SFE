@@ -69,8 +69,8 @@ app.use('/api/session', require('./routes/sessions'));
 app.use('/api/documents', require('./routes/document'));
 app.use('/api/evenement', require('./routes/evenements'));
 app.use('/api/payement', require('./routes/payement'));
-
 app.use('/api/demandeAdehesion', require('./routes/demandeAdehesion'));
+app.use('/api/depense', require('./routes/depense'));
 
 
 
@@ -95,14 +95,15 @@ app.post('/api/images/uploadImage/:userId', upload.single('image'), (req, res) =
 
 
 
-// Endpoint pour créer un paiement
 app.post('/create-payment-intent', async (req, res) => {
-  const { amount } = req.body;
+  const { amount, name } = req.body; // Ajout du champ 'name' pour récupérer le nom de la personne
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
-      currency: 'usd', // Changer en la devise de votre choix
+      currency: 'usd',
+      description: `Payment from ${name}`, 
+      // Utilisation du nom dans la description
     });
     res.send({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
@@ -111,19 +112,28 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 });
 
-
-
-// Endpoint pour récupérer les paiements
 app.get('/payments', async (req, res) => {
   try {
     const payments = await stripe.paymentIntents.list({ limit: 10 });
-    console.log('Liste des paiements:', payments.data);
-    res.json(payments.data); // Envoyer les paiements en tant que réponse JSON
+    const formattedPayments = payments.data.map(payment => {
+      let name = null;
+      if (payment.description !== null) { // Ajout de la condition pour vérifier si la description est différente de null
+        name = payment.description.split('Payment from ')[1]; // Extraction du nom depuis la description
+      }
+      return { 
+        amount: payment.amount, // Récupération du montant
+        name, // Récupération du nom
+      };
+    }).filter(payment => payment.name !== null && payment.name !== 'undefined'); // Filtre pour ne garder que les paiements avec un nom non null et non undefined
+    console.log('Liste des paiements:', formattedPayments);
+    res.json(formattedPayments); // Envoyer les paiements en tant que réponse JSON avec le nom et le montant
   } catch (error) {
     console.error('Erreur lors de la récupération des paiements:', error);
     res.status(500).json({ error: 'Une erreur est survenue lors de la récupération des paiements.' });
   }
 });
+
+
 
 
 
