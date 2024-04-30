@@ -71,6 +71,8 @@ app.use('/api/evenement', require('./routes/evenements'));
 app.use('/api/payement', require('./routes/payement'));
 app.use('/api/demandeAdehesion', require('./routes/demandeAdehesion'));
 app.use('/api/depense', require('./routes/depense'));
+app.use('/api/don', require('./routes/don'));
+
 
 
 
