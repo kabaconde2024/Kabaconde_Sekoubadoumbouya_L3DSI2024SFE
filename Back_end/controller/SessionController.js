@@ -265,6 +265,10 @@ const updateSessionPrice = async (req, res) => {
     }
   };
 
+
+
+            
+
 module.exports = {
     creerSession,
     afficherSessions,

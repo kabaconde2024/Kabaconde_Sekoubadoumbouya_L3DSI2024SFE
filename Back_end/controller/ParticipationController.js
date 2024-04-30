@@ -132,6 +132,17 @@ const updatedParticipation = async (req, res) => {
     }
 };
 
-  
+const countParticipants = async (req, res) => {
+    try {
+        const sessionId = req.params.sessionId; // Supposons que l'ID de la session soit passé en tant que paramètre d'URL
+        // Utilisez countDocuments() pour compter les participations à la session spécifiée
+        const participantsCount = await Participation.countDocuments({ session: sessionId });
+        res.status(200).json({ count: participantsCount }); // Envoyer la réponse avec le nombre de participants
+    } catch (error) {
+        console.error('Erreur lors du comptage des participants :', error);
+        res.status(500).json({ error: 'Erreur lors du comptage des participants' }); // Envoyer une réponse d'erreur en cas d'erreur
+    }
+}
 
-module.exports = { afficherparticipation ,ajouterparticiaption,afficherToutesParticipations,updatedParticipation};
+
+module.exports = { countParticipants,afficherparticipation ,ajouterparticiaption,afficherToutesParticipations,updatedParticipation};

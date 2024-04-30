@@ -36,7 +36,26 @@ const creerFormation = async (req, res) => {
     }
 };
 
+const getAllSessionsForFormation = async (req, res) => {
+    try {
+        const id = req.params.id;
+  
+        // Trouver la formation par son ID et populer le champ 'sessions' pour récupérer toutes les sessions liées
+        const formation = await Formation.findById(id).populate('sessions');
 
+        if (!formation) {
+            throw new Error('Formation non trouvée');
+        }
+
+        // Renvoyer les sessions récupérées en réponse
+        res.json(formation.sessions);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des sessions de la formation' });
+    }
+};
+
+ 
 const afficher= async (req, res) => {
     try {
       const formationId = req.params.id;
@@ -284,4 +303,6 @@ module.exports = {
     formationsByFormateur,
     recupererSessionsFormation,
     Afficher,
+    getAllSessionsForFormation,
+
 }
