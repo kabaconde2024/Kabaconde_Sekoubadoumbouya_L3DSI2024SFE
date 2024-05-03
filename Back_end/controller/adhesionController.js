@@ -180,7 +180,22 @@ const supprimerDemande= async (req, res) => {
 };
 
 
+const modifierPaye = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Mettre à jour l'attribut "paye" dans la demande correspondante à true
+    await Demande.findOneAndUpdate({ user: userId }, { paye: true });
+
+    // Répondre avec un statut 200 pour indiquer que la demande a été mise à jour avec succès
+    res.status(200).json({ success: true, message: 'Attribut "paye" mis à jour avec succès.' });
+  } catch (error) {
+    // En cas d'erreur, répondre avec un statut 500 et un message d'erreur
+    console.error('Erreur lors de la mise à jour de l\'attribut "paye" de la demande :', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la mise à jour de l\'attribut "paye" de la demande.' });
+  }
+};
 
   
-  module.exports = { DemandeAdhesion,supprimerDemande,getDemandes,accepterAdhesion,getDemande,getDemandesByUser};
+  module.exports = { modifierPaye,DemandeAdhesion,supprimerDemande,getDemandes,accepterAdhesion,getDemande,getDemandesByUser};
   

@@ -95,18 +95,30 @@ app.post('/api/images/uploadImage/:userId', upload.single('image'), (req, res) =
     }
 });
 
-
+const User = require('./model/User');
 
 app.post('/create-payment-intent', async (req, res) => {
-  const { amount, name } = req.body; // Ajout du champ 'name' pour récupérer le nom de la personne
+  const { amount, userId } = req.body;
 
   try {
+    // Récupérer l'utilisateur à partir de son userId
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      throw new Error('Utilisateur non trouvé avec cet identifiant');
+    }
+
+    // Récupérer le nom de l'utilisateur
+    const userName = user.username;
+
+    // Créer le paiement avec le nom de l'utilisateur dans la description
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: 'usd',
-      description: `Payment from ${name}`, 
-      // Utilisation du nom dans la description
+      description: `Payment from ${userName}`,
     });
+
+    // Envoyer le clientSecret en réponse
     res.send({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
     console.error('Erreur lors de la création du paiement:', error);
@@ -119,21 +131,32 @@ app.get('/payments', async (req, res) => {
     const payments = await stripe.paymentIntents.list({ limit: 10 });
     const formattedPayments = payments.data.map(payment => {
       let name = null;
-      if (payment.description !== null) { // Ajout de la condition pour vérifier si la description est différente de null
-        name = payment.description.split('Payment from ')[1]; // Extraction du nom depuis la description
+      if (payment.description !== null) {
+        name = payment.description.split('Payment from ')[1];
       }
+      
+      // Récupération de la date, de l'état et du moyen de paiement
+      const date = new Date(payment.created * 1000); // Convertir la date UNIX en JavaScript
+      const paymentMethod = payment.payment_method_types[0]; // Récupérer le premier moyen de paiement
+      const status = payment.status; // Récupérer l'état du paiement
+      
       return { 
-        amount: payment.amount, // Récupération du montant
-        name, // Récupération du nom
+        amount: payment.amount,
+        name,
+        date,
+        paymentMethod,
+        status,
       };
-    }).filter(payment => payment.name !== null && payment.name !== 'undefined'); // Filtre pour ne garder que les paiements avec un nom non null et non undefined
+    }).filter(payment => payment.name !== null && payment.name !== 'undefined');
+
     console.log('Liste des paiements:', formattedPayments);
-    res.json(formattedPayments); // Envoyer les paiements en tant que réponse JSON avec le nom et le montant
+    res.json(formattedPayments);
   } catch (error) {
     console.error('Erreur lors de la récupération des paiements:', error);
     res.status(500).json({ error: 'Une erreur est survenue lors de la récupération des paiements.' });
   }
 });
+
 
 
 
