@@ -12,7 +12,9 @@ const EffectuerPayement = async (req, res) => {
       price: price,
       mode: mode,
       userId: userId,
-      session: session
+      session: session,
+       // Définir MontantRestant sur la valeur de price
+
       // Ajoutez d'autres champs d'information utilisateur et de session si nécessaire
     });
 
@@ -64,10 +66,37 @@ const recupererPaiementsUtilisateur = async (req, res) => {
 };
 
 
+const mettreAJourMontantRestant = async (req, res) => {
+  try {
+    // Récupérer l'ID du paiement à mettre à jour depuis les paramètres de la requête
+    const paiementId = req.params.paiementId;
+    
+    // Récupérer le nouveau montant restant depuis le corps de la requête
+    const nouveauMontantRestant = req.body.nouveauMontantRestant;
+
+    // Mettre à jour le paiement avec le nouveau montant restant
+    const paiementMisAJour = await Payement.findByIdAndUpdate(
+      paiementId,
+      { MontantRestant: nouveauMontantRestant },
+      { new: true } // Pour renvoyer le document mis à jour plutôt que l'ancien document
+    );
+
+    // Vérifier si le paiement a été mis à jour avec succès
+    if (paiementMisAJour) {
+      res.status(200).json({ message: 'MontantRestant mis à jour avec succès.', paiement: paiementMisAJour });
+    } else {
+      res.status(404).json({ message: 'Paiement non trouvé.' });
+    }
+  } catch (error) {
+    // En cas d'erreur, répondre avec un message d'erreur
+    console.error('Erreur lors de la mise à jour du MontantRestant du paiement :', error);
+    res.status(500).json({ message: 'Une erreur s\'est produite lors de la mise à jour du MontantRestant du paiement.' });
+  }
+};
 
 
 
 
   
-  module.exports = { EffectuerPayement,recupererPaiements,recupererPaiementsUtilisateur};
+  module.exports = { mettreAJourMontantRestant,EffectuerPayement,recupererPaiements,recupererPaiementsUtilisateur};
   

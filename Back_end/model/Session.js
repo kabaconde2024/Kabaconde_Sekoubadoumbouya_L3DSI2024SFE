@@ -10,7 +10,10 @@ const sessionSchema = new Schema({
     prix: { type: Number, required: true },
     remarque: { type: String, required: true },
     userSession:{type: Schema.Types.ObjectId, ref: 'User' },
-
+    MontantRestant: {
+        type: Number,
+        required: true
+      },
 
 
 });

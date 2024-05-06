@@ -1,0 +1,224 @@
+import React, { useState, useEffect } from 'react';
+import Card from "@mui/material/Card";
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import axios from 'axios';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import Payement from 'layouts/Payements/Payement';
+import { Elements } from '@stripe/react-stripe-js'; 
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe('pk_test_51OuEfcRuWErPhnDewu0XzfaZmTd4zIJtMmno40B9wsGtY3dC56x6DdIFp0WCLdPTA0RHM0jrmjvHXmNjs4nfqJR200LvigUTvP');
+
+function Adhesion() {
+  const [showAdhesionReminder, setShowAdhesionReminder] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [demandeStatus, setDemandeStatus] = useState('');
+  const [bilanDocuments, setBilanDocuments] = useState([]);
+  const [paymentInProgress, setPaymentInProgress] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false); // Initialisez paymentSuccess à false
+
+  useEffect(() => {
+    const fetchBilanDocuments = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/documents/getDocuments');
+        setBilanDocuments(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des documents de type "bilan" :', error.message);
+      }
+    };
+
+    fetchBilanDocuments();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchDemandeStatus = async () => {
+      try {
+        const userId = sessionStorage.getItem("userId");
+        if (!userId) {
+          console.error('Identifiant utilisateur non trouvé.');
+          return;
+        }
+  
+        const response = await axios.get(`http://localhost:5000/api/adhesion/getDemandes?userId=${userId}`);
+        setDemandeStatus(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du statut de la demande :', error);
+      }
+    };
+  
+    fetchDemandeStatus();
+  }, []);
+  
+  const afficherRappelAdhesion = () => {
+    const demandeEffectueeCeMois = false;
+
+    if (!demandeEffectueeCeMois) {
+      setShowAdhesionReminder(true);
+    }
+  };
+
+  useEffect(() => {
+    afficherRappelAdhesion();
+  }, []);
+
+  
+  const handleAdhesion = () => {
+    setOpenDialog(true);
+  };
+
+  const handleConfirmation = async (confirmation) => {
+    setOpenDialog(false);
+
+    if (confirmation) {
+      try {
+        const userId = sessionStorage.getItem("userId");
+        const response = await axios.post('http://localhost:5000/api/adhesion/DemandeAdhesion', { userId });
+        setShowSuccessMessage(true);
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi de l\'adhésion à l\'admin :', error);
+        if (error.response && error.response.data && error.response.data.message) {
+        } else {
+          setErrorMessage('Erreur lors de l\'envoi de l\'adhésion.');
+        }
+        setShowErrorMessage(true);
+      }
+    }
+  };
+  useEffect(() => {
+    // Récupérer la valeur de paymentSuccess du localStorage
+    const storedPaymentSuccess = JSON.parse(localStorage.getItem('paymentSuccess'));
+    // Mettre à jour l'état paymentSuccess avec la valeur récupérée
+    setPaymentSuccess(storedPaymentSuccess);
+  }, []);
+  
+  const handlePaymentButtonVisibility = () => {
+    setPaymentInProgress(true); // Définir l'état du paiement en cours
+  }
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false); // Masquer le formulaire de paiement après un paiement réussi
+    setPaymentSuccess(true); // Mettre à jour paymentSuccess à true
+    // Stocker paymentSuccess dans localStorage
+    localStorage.setItem('paymentSuccess', JSON.stringify(true));
+  };
+
+  return (
+    <DashboardLayout>
+      <DashboardNavbar />
+      <ArgonBox py={3}>
+        <ArgonBox mb={3}>
+        <Card>
+            <div className="documents-container">
+              <div className="horizontal-scroll documents">
+                {bilanDocuments.map((document, index) => (
+                  <span className="document-description" key={document._id}>
+                    {document.description}
+                  </span>
+                ))}
+              </div>
+            </div>
+            </Card><br></br>
+          <Card sx={{ maxWidth: 9000 ,marginTop: '50px', marginLeft:'10px'}}>  
+            <div className="documents-container">
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  <div>
+                    <div>
+                      {demandeStatus && !demandeStatus.demandes && (
+                        <div>
+                          <Button variant="contained" color="primary" onClick={handleAdhesion} style={{ backgroundColor: 'green', color: 'white' }}>
+                            Demande
+                          </Button>
+                          <br />
+                        </div>
+                      )}
+                    </div>
+                    <br></br>
+                    <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                      <DialogTitle>Voulez-vous vraiment faire votre adhésion ?</DialogTitle>
+                      <DialogContent className="dialog-content">
+                        <DialogActions>
+                          <Button onClick={() => handleConfirmation(true)} color="primary">
+                            Oui
+                          </Button>
+                          <Button onClick={() => handleConfirmation(false)} color="primary">
+                            Non
+                          </Button>
+                        </DialogActions>
+                      </DialogContent>
+                    </Dialog>
+
+                    {showSuccessMessage && (
+                      <Alert severity="success">
+                        Votre demande adhésion a été envoyée à admin avec succès.
+                      </Alert>
+                    )}
+
+                    {showErrorMessage && (
+                      <Alert severity="error">
+                        {errorMessage}
+                      </Alert>
+                    )}
+
+<div>
+  {demandeStatus === null && <div>Chargement...</div>}
+  {demandeStatus && demandeStatus.message && <div style={{color:'red',fontSize:'20px',fontFamily:'fantasy'}}>{demandeStatus.message}</div>}
+  {demandeStatus && demandeStatus.demandes && (
+    <div >
+      {demandeStatus.demandes.length === 0 && <div>Aucune demande en attente.</div>}
+      {demandeStatus.demandes.some(demande => demande.accepte) && (
+        <div style={{color:'blue',fontSize:'20px',fontFamily:'fantasy'}}>
+          {paymentSuccess ? (
+            <div>
+              Vous avez  payé les frais d&rsquo;adhésion.
+            </div>
+          ) : (
+            <div>
+              Vous avez une demande acceptée.<br></br>
+              {!paymentSuccess && (
+                <div>
+                  {showPayment ? (
+                    <Elements stripe={stripePromise}>
+                      <Payement onSuccess={handlePaymentSuccess} />
+                    </Elements>
+                  ) : (
+                    <Button variant="contained" color="primary" disabled={paymentInProgress} onClick={() => setShowPayment(true)}>
+                      Payer
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      {demandeStatus.demandes.every(demande => !demande.accepte) && (
+        <div style={{color:'Yellow',fontSize:'20px',fontFamily:'fantasy'}}>Votre demande est en cours de traitement.</div>
+      )}
+    </div>
+  )}
+</div>
+
+                  </div>
+                </Typography>
+              </CardContent>
+            </div>
+          </Card>
+        </ArgonBox>
+  
+      </ArgonBox>
+    </DashboardLayout>
+  );
+}
+
+export default Adhesion;

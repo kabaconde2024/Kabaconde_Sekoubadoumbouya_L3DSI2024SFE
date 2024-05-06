@@ -6,13 +6,14 @@ const paymentSchema = new Schema({
     type: Number,
     required: true
   },
+
   date: {
     type: Date,
     default: Date.now
   },
   mode: {
     type: String,
-    enum: ['Carte de crédit', 'PayPal', 'Virement bancaire'],
+    enum: ['Carte de crédit', 'espece', 'cheque'],
     required: true
   },
   userId: {
