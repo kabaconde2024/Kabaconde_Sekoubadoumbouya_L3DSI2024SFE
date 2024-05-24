@@ -6,12 +6,35 @@ const Session = require('../model/Session');
 // Obtenir la liste de tous les utilisateurs
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find(); // Filtrer les utilisateurs par le rôle "formateur"
+        // Filtrer les utilisateurs par le rôle "formateur" et archive false
+        const users = await User.find({ archive: false }); 
 
         res.status(200).json(users);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur lors de la récupération des utilisateurs." });
+    }
+};
+const getAllUsersName = async (req, res) => {
+    try {
+        const users = await User.find().select('username'); // Sélectionnez uniquement les noms d'utilisateur
+
+        res.status(200).json(users.map(user => user.username)); // Renvoyer uniquement les noms d'utilisateur
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de la récupération des utilisateurs." });
+    }
+};
+
+
+
+const getUserCount = async (req, res) => {
+    try {
+        const userCount = await User.countDocuments();
+        res.status(200).json({ count: userCount });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de la récupération du nombre d'utilisateurs." });
     }
 };
 
@@ -27,7 +50,7 @@ const getFormateur = async (req, res) => {
 };
 
 
-
+/*
 const getUserById = async (req, res) => {
     try {
         const userId = req.params.userId; // Récupérer l'ID de l'utilisateur à partir des paramètres de la requête
@@ -48,26 +71,42 @@ const getUserById = async (req, res) => {
     }
 };
 
+*/
+const getUserById = async (req, res) => {
+    try {
+        const session = await User.findById(req.params.id);
+        
+        if (!session) {
+            return res.status(404).json({ message: 'User non trouvée.' });
+        }
+
+        res.status(200).json(session);
+    } catch (error) {
+        console.error('Erreur lors de la récupération de la session :', error.message);
+        res.status(500).json({ error: 'Erreur lors de la récupération de la session.' });
+    }
+};
 
 // Supprimer un utilisateur par ID
 const deleteUserById = async (req, res) => {
     try {
-        // Supprimer l'utilisateur
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        // Marquer l'utilisateur comme archivé
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { archive: true },
+            { new: true }
+        );
 
-        if (!deletedUser) {
+        if (!updatedUser) {
             return res.status(404).json({ message: "Utilisateur non trouvé." });
         }
 
-        // Supprimer toutes les sessions associées à cet utilisateur
-        await Session.deleteMany({ userId: req.params.userId });
-
-        res.status(200).json({ message: 'Utilisateur et sessions associées supprimés avec succès.' });
+        res.status(200).json({ message: 'Utilisateur archivé avec succès.' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur et des sessions associées." });
+        res.status(500).json({ message: "Erreur lors de l'archivage de l'utilisateur." });
     }
-};
+}; 
 
 
 
@@ -100,5 +139,7 @@ module.exports = {
     updateUserById,
     getUserById,
     getFormateur,
+    getUserCount,
+    getAllUsersName,
     
 };

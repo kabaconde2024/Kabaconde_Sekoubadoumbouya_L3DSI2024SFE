@@ -1,0 +1,150 @@
+maildev
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
+
+const app = express();
+const port = 3000;
+
+// Connexion à la base de données MongoDB avec Mongoose
+mongoose.connect('mongodb://localhost:27017/Mybase', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log("Connexion à la base de données réussie");
+}).catch((err) => {
+    console.error("Erreur de connexion à la base de données :", err);
+});
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Modèle de schéma Mongoose pour les utilisateurs
+const User = mongoose.model('User', {
+    username: String,
+    email: String,
+    telephone: String
+});
+
+// Configurer le transporteur SMTP avec MailDev
+const transporter = nodemailer.createTransport({
+  host: 'localhost',
+  port: 1025, // Le port SMTP de MailDev
+  ignoreTLS: true, // Ignorer TLS car MailDev ne le supporte pas
+});
+
+// Route pour enregistrer un nouvel utilisateur
+app.post('/register', async (req, res) => {
+    try {
+        const { username, email, telephone } = req.body;
+        // Enregistrer l'utilisateur dans la base de données
+        const user = new User({ username, email, telephone });
+        await user.save();
+        
+        // Paramètres de l'e-mail
+        const mailOptions = {
+          from: 'Mohamed@gmail.com',
+          to: email, // Envoyer à l'utilisateur nouvellement enregistré
+          subject: 'Bienvenue sur notre plateforme',
+          text: `Bonjour ${username}, merci de vous être inscrit sur notre plateforme.`,
+        };
+        
+        // Envoyer l'e-mail
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error('Erreur lors de l\'envoi de l\'e-mail :', error);
+          } else {
+            console.log('E-mail envoyé :', info.response);
+          }
+        });
+
+        res.status(200).json({ message: 'Utilisateur enregistré avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement de l\'utilisateur :', error);
+        res.status(500).json({ message: 'Erreur lors de l\'enregistrement de l\'utilisateur' });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
+
+
+*******************************************************************************************************
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
+
+const app = express();
+const port = 3000;
+
+// Connexion à la base de données MongoDB avec Mongoose
+mongoose.connect('mongodb://localhost:27017/Mybase', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log("Connexion à la base de données réussie");
+}).catch((err) => {
+    console.error("Erreur de connexion à la base de données :", err);
+});
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Modèle de schéma Mongoose pour les utilisateurs
+const User = mongoose.model('User', {
+    username: String,
+    email: String,
+    telephone: String
+});
+
+// Configurer le transporteur SMTP
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'kabaconde5259@gmail.com',
+    pass: 'kabaconde2024@'
+  }
+});
+
+// Route pour enregistrer un nouvel utilisateur
+app.post('/register', async (req, res) => {
+    try {
+        const { username, email, telephone } = req.body;
+        // Enregistrer l'utilisateur dans la base de données
+        const user = new User({ username, email, telephone });
+        await user.save();
+        
+        // Paramètres de l'e-mail
+        const mailOptions = {
+            from: 'kabaconde5259@gmail.com',
+            to: email,
+            subject: 'Bienvenue sur notre plateforme',
+            text: `Bonjour ${username}, merci de vous être inscrit sur notre plateforme.`
+          };
+          
+        
+        // Envoyer l'e-mail
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error('Erreur lors de l\'envoi de l\'e-mail :', error);
+          } else {
+            console.log('E-mail envoyé :', info.response);
+          }
+        });
+
+        res.status(200).send('Utilisateur enregistré avec succès.');
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement de l\'utilisateur :', error);
+        res.status(500).send('Erreur lors de l\'enregistrement de l\'utilisateur.');
+    }
+});
+
+
+
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});

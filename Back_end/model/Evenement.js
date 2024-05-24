@@ -8,6 +8,8 @@ const evenementschema = new mongoose.Schema({
   image: { type: String, required: true },
   description: { type: String, required: true },
   date: { type: String, required: true },
+  archive: { type: Boolean, required: true ,default:false},
+
 
 }, { collection: 'Evenement' }); // Utilisez 'Actualite' pour la collection
 

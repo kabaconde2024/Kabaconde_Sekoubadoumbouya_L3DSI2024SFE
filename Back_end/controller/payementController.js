@@ -1,10 +1,12 @@
 const Payement = require('../model/Payement');
 const express = require('express');
+const Sessions = require('../model/Session');
+const User = require('../model/User');
 
 
 const EffectuerPayement = async (req, res) => {
   // Récupérer les données du paiement depuis le corps de la requête
-  const { price, mode, userId, session } = req.body;
+  const { price, mode, userId, session,date} = req.body;
 
   try {
     // Créer une nouvelle instance de paiement avec les données fournies, y compris les informations d'utilisateur et de session
@@ -13,9 +15,7 @@ const EffectuerPayement = async (req, res) => {
       mode: mode,
       userId: userId,
       session: session,
-       // Définir MontantRestant sur la valeur de price
-
-      // Ajoutez d'autres champs d'information utilisateur et de session si nécessaire
+      date:date
     });
 
     // Enregistrer le paiement dans la base de données
@@ -33,9 +33,10 @@ const EffectuerPayement = async (req, res) => {
 
 const recupererPaiements = async (req, res) => {
   try {
-    // Récupérer tous les paiements depuis la base de données
-    const paiements = await Payement.find();
-    
+    // Récupérer tous les paiements depuis la base de données et peupler les références vers les utilisateurs et les sessions
+    const paiements = await Payement.find().populate({ path: 'userId', select: 'username telephone' }).populate('session');
+    console.log("Dates récupérées :", paiements.map(payment => payment.date));
+
     // Répondre avec les paiements récupérés
     res.status(200).json(paiements);
   } catch (error) {
@@ -44,6 +45,10 @@ const recupererPaiements = async (req, res) => {
     res.status(500).json({ message: 'Une erreur s\'est produite lors de la récupération des paiements.' });
   }
 };
+
+
+
+
 const recupererPaiementsUtilisateur = async (req, res) => {
   try {
     // Récupérer l'ID de l'utilisateur et l'ID de la session à partir des paramètres de la requête
@@ -65,38 +70,32 @@ const recupererPaiementsUtilisateur = async (req, res) => {
   }
 };
 
-
-const mettreAJourMontantRestant = async (req, res) => {
+const PaiementsUtilisateur = async (req, res) => {
   try {
-    // Récupérer l'ID du paiement à mettre à jour depuis les paramètres de la requête
-    const paiementId = req.params.paiementId;
-    
-    // Récupérer le nouveau montant restant depuis le corps de la requête
-    const nouveauMontantRestant = req.body.nouveauMontantRestant;
+    // Récupérer l'ID de l'utilisateur à partir des paramètres de la requête
+    const userId = req.params.userId;
 
-    // Mettre à jour le paiement avec le nouveau montant restant
-    const paiementMisAJour = await Payement.findByIdAndUpdate(
-      paiementId,
-      { MontantRestant: nouveauMontantRestant },
-      { new: true } // Pour renvoyer le document mis à jour plutôt que l'ancien document
-    );
+    // Récupérer tous les paiements associés à cet utilisateur depuis la base de données
+    const paiementsUtilisateur = await Payement.find({ userId: userId });
 
-    // Vérifier si le paiement a été mis à jour avec succès
-    if (paiementMisAJour) {
-      res.status(200).json({ message: 'MontantRestant mis à jour avec succès.', paiement: paiementMisAJour });
-    } else {
-      res.status(404).json({ message: 'Paiement non trouvé.' });
-    }
+    // Calculer la somme des prix des sessions payées en utilisant la méthode reduce
+    const prixTotalSessions = paiementsUtilisateur.reduce((total, paiement) => total + paiement.price, 0);
+
+    // Répondre avec le prix total
+    res.status(200).json({ prixTotalSessions });
   } catch (error) {
     // En cas d'erreur, répondre avec un message d'erreur
-    console.error('Erreur lors de la mise à jour du MontantRestant du paiement :', error);
-    res.status(500).json({ message: 'Une erreur s\'est produite lors de la mise à jour du MontantRestant du paiement.' });
+    console.error('Erreur lors de la récupération du prix total des sessions de l\'utilisateur :', error);
+    res.status(500).json({ message: 'Une erreur s\'est produite lors de la récupération du prix total des sessions de l\'utilisateur.' });
   }
 };
 
 
 
 
+
+
+
   
-  module.exports = { mettreAJourMontantRestant,EffectuerPayement,recupererPaiements,recupererPaiementsUtilisateur};
+  module.exports = {PaiementsUtilisateur, EffectuerPayement,recupererPaiements,recupererPaiementsUtilisateur};
   

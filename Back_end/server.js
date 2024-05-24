@@ -5,7 +5,6 @@ const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
 const stripe = require('stripe')('sk_test_51OuEfcRuWErPhnDe00PMhcbxFWXVZOd950QjBWk8JxnG4Z9n9A1XUuiQ82MMbM2cXisvmer8mPMVWmy7ocGE9d2300tIundsmy');
-const demandeAdehesion = require('./routes/demandeAdehesion');
 
 
 const app = express();
@@ -66,12 +65,13 @@ app.use('/api/formation', require('./routes/formation'));
 app.use('/api/adhesion', require('./routes/adhesion'));
 app.use('/api/participation', require('./routes/participations'));
 app.use('/api/session', require('./routes/sessions'));
-app.use('/api/documents', require('./routes/document'));
+app.use('/api/documents', require('./routes/publication'));
 app.use('/api/evenement', require('./routes/evenements'));
 app.use('/api/payement', require('./routes/payement'));
-app.use('/api/demandeAdehesion', require('./routes/demandeAdehesion'));
 app.use('/api/depense', require('./routes/depense'));
 app.use('/api/don', require('./routes/don'));
+app.use('/api/participerEvenement', require('./routes/participerEvenement'));
+app.use('/api/commentaire', require('./routes/commentaires'));
 
 
 
@@ -157,8 +157,35 @@ app.get('/payments', async (req, res) => {
   }
 });
 
+app.get('/payments/:id', async (req, res) => {
+  try {
+    const id = req.params.id; // Récupérer l'identifiant de la personne à partir des paramètres de la requête
+    const payments = await stripe.paymentIntents.list({ limit: 10, customer: id }); // Filtrer les paiements pour la personne spécifiée
+    const formattedPayments = payments.data.map(payment => {
+      let name = null;
+      if (payment.description !== null) {
+        name = payment.description.split('Payment from ')[1];
+      }
+      
+      // Récupération de la date, de l'état et du moyen de paiement
+      const date = new Date(payment.created * 1000); // Convertir la date UNIX en JavaScript
+      const paymentMethod = payment.payment_method_types[0]; // Récupérer le premier moyen de paiement
+      const status = payment.status; // Récupérer l'état du paiement
+      
+      return { 
+        amount: payment.amount,
+        name,
+        date,
+        paymentMethod,
+        status,
+      };
+    }).filter(payment => payment.name !== null && payment.name !== 'undefined');
 
-
+    res.json(formattedPayments);
+  } catch (error) {
+    res.status(500).json({ error: 'Une erreur est survenue lors de la récupération des paiements.' });
+  }
+});
 
 
 

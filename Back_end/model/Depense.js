@@ -6,6 +6,7 @@ const DepenseSchema = new Schema({
     intitule: { type: String, required: true }, 
     description: { type: String, required: true }, 
     prix: { type: Number, required: true },
+    date: { type: Date, required: true }, 
 
 });
 

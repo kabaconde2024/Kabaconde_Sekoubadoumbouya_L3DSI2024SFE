@@ -1,0 +1,472 @@
+import React, { useState, useEffect } from 'react';
+import Card from "@mui/material/Card";
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import "./Dashboard.css"; // Importation de votre fichier CSS
+import axios from 'axios';
+import {  CardContent, CardMedia,  Grid } from '@mui/material';
+import ArgonTypography from "components/ArgonTypography";
+import { Button, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import Avatar from '@mui/material/Avatar';
+import Typography from '@mui/material/Typography';
+import {   Dialog, TextField } from '@mui/material';
+import { Form } from 'react-bootstrap';
+
+
+function Dashboard() {
+  const [bilanDocuments, setBilanDocuments] = useState([]);
+
+  useEffect(() => {
+    const fetchBilanDocuments = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/documents/getDocuments');
+        setBilanDocuments(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des documents de type "bilan" :', error.message);
+      }
+    };
+
+    fetchBilanDocuments();
+  }, []);
+
+////////////////////////////////////////partie Profile **********************************************************************
+const [userProfile, setUserProfile] = useState({});
+  const [updatedUsername, setUpdatedUsername] = useState('');
+  const [updatedEmail, setUpdatedEmail] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [image, setImage] = useState('');
+  const [showPhotoButton, setShowPhotoButton] = useState(false);
+  const [showPasswordButton, setShowPasswordButton] = useState(false);
+  
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+
+  const [errorMessage, setErrorMessage] = useState('');
+const [successMessage, setSuccessMessage] = useState('');
+
+
+  useEffect(() => {
+    const storedUsername = sessionStorage.getItem('username');
+    const storedEmail = sessionStorage.getItem('email');
+    const storedUserId = sessionStorage.getItem('userId');
+
+    setUserProfile({
+      username: storedUsername,
+      email: storedEmail,
+    });
+    setUserId(storedUserId);
+  }, []);
+
+
+  
+
+  const handleUpdateProfile = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/auth/updateUserById/${userId}`, {
+        username: updatedUsername,
+        email: updatedEmail,
+      });
+
+      sessionStorage.setItem('username', updatedUsername);
+      sessionStorage.setItem('email', updatedEmail);
+
+      setUserProfile({
+        ...userProfile,
+        username: updatedUsername,
+        email: updatedEmail,
+      });
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil utilisateur :', error.message);
+    }
+  };
+
+  const handleEditProfile = () => {
+    setUpdatedUsername(userProfile.username);
+    setUpdatedEmail(userProfile.email);
+    setIsEditing(true);
+    setShowPhotoButton(true);
+    setShowPasswordButton(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setShowPhotoButton(false);
+    setShowPasswordButton(false);
+  };
+
+  const handleEditPhoto = () => {
+    const fileInput = document.getElementById('fileInput');
+    fileInput.click();
+  };
+  
+
+  const handleEditPassword = () => {
+    setChangePasswordDialogOpen(true);
+  };
+
+  const handleSavePassword = async () => {
+    try {
+      const response = await axios.post(`http://localhost:5000/api/auth/comparePassword/${userId}`, {
+        oldPassword: oldPassword
+      });
+  
+      if (!response.data.passwordMatch) {
+        setErrorMessage("Le mot de passe actuel est incorrect.");
+        setSuccessMessage('');
+        return;
+      }
+  
+      if (newPassword !== confirmPassword) {
+        setErrorMessage("Les nouveaux mots de passe ne correspondent pas.");
+        setSuccessMessage('');
+        return;
+      }
+  
+      await axios.put(`http://localhost:5000/api/auth/updatePassword/${userId}`, {
+        newPassword: newPassword
+      });
+  
+      setChangePasswordDialogOpen(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSuccessMessage('Mot de passe mis à jour avec succès.');
+      setErrorMessage('');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du mot de passe :', error.message);
+      setErrorMessage("Erreur lors de la mise à jour du mot de passe.");
+      setSuccessMessage('');
+    }
+  };
+  
+/*
+  const handleSavePassword = async () => {
+    try {
+      const response = await axios.post(`http://localhost:5000/api/auth/comparePassword/${userId}`, {
+        oldPassword: oldPassword
+      });
+  
+      if (response.data.passwordMatch) {
+        if (newPassword !== confirmPassword) {
+          setErrorMessage("Les nouveaux mots de passe ne correspondent pas.");
+          setSuccessMessage('');
+          return;
+        }
+  
+        await axios.put(`http://localhost:5000/api/auth/updatePassword/${userId}`, {
+          newPassword: newPassword
+        });
+  
+        setChangePasswordDialogOpen(false);
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setSuccessMessage('Mot de passe mis à jour avec succès.');
+        setErrorMessage('');
+      } else {
+        setErrorMessage("Le mot de passe saisi est incorrect.");
+        setSuccessMessage('');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du mot de passe :', error.message);
+      setErrorMessage("Erreur lors de la mise à jour du mot de passe.");
+      setSuccessMessage('');
+    }
+  };
+  */
+/*
+
+  const handleSavePassword = async () => {
+    try {
+        // Vérifiez si le nouveau mot de passe et la confirmation sont identiques
+        if (newPassword !== confirmPassword) {
+            // Affichez un message d'erreur ou effectuez une action appropriée
+            return;
+        }
+
+        // Envoyez une demande PUT à votre backend pour mettre à jour le mot de passe
+        await axios.put(`http://localhost:5000/api/auth/updatePassword/${userId}`, {
+            newPassword: newPassword
+        });
+
+        // Si la demande est réussie, réinitialisez les champs de mot de passe et fermez le dialogue
+        setChangePasswordDialogOpen(false);
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+    } catch (error) {
+        // Gérez les erreurs ici, par exemple, affichez un message d'erreur à l'utilisateur
+        console.error('Erreur lors de la mise à jour du mot de passe :', error.message);
+    }
+};
+*/
+  const handleClosePasswordDialog = () => {
+    setChangePasswordDialogOpen(false);
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+
+  const handleUploadPhoto = async (event) => {
+    try {
+      const file = event.target.files[0];
+  //$2b$10$r/kbUJ9Ha1.84M.KgdpQUumRoKvTU9MeFWWoREfOu5NF8UJtqD6pS"
+      const formData = new FormData();
+      formData.append('image', file);
+  
+      const response = await axios.post(`http://localhost:5000/api/images/uploadImage/${userId}`, formData);
+  
+      if (response.data.imageURL) {
+        localStorage.setItem(`profileImage_${userId}`, response.data.imageURL);
+  
+        setImage(response.data.imageURL);
+        console.log(" Les Donnees :" + response.data.imageURL);
+      } else {
+        console.error('Erreur: Aucune URL d\'image renvoyée par le serveur.');
+      }
+    } catch (error) {
+      console.error('Erreur lors du téléchargement de la photo de profil :', error.message);
+    }
+  };
+
+  React.useEffect(() => {
+    const storedImage = localStorage.getItem(`profileImage_${userId}`);
+    if (storedImage) {
+      setImage(storedImage);
+    }
+  }, [userId]); 
+
+
+
+
+
+
+
+
+
+  return (
+    <DashboardLayout>
+      <DashboardNavbar />
+      <ArgonBox py={3}>
+        
+        <Card>
+            <div className="documents-container">
+              <div className="horizontal-scroll documents">
+                {bilanDocuments.map((document, index) => (
+                  <span className="document-description" key={document._id}>
+                    {document.description+" "}
+                    {document.date}
+                  </span>
+                ))}
+              </div>
+            </div>
+            </Card><br></br>
+
+
+            {/* ********************************************************************  */}
+           
+
+
+
+            <div>
+        <ArgonBox py={3}>
+          <Card>
+            <ArgonBox p={3}>
+              <Typography gutterBottom variant="h5" component="div" style={{ marginBottom: '16px', fontSize: '2rem', fontWeight: 'bold', color: '#3f51b5', fontFamily: 'Arial, sans-serif', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)' }}>
+              Profil Utilisateur
+               </Typography>
+             <Avatar alt={userProfile.username} src={image}   sx={{ width: 100, height: 100 }}/>
+             <DialogContent>
+                <div>
+                  <strong>{userProfile.username}</strong>
+                </div>
+                <div>
+                  <strong>{userProfile.email} </strong>
+                </div>
+              </DialogContent>
+              
+
+              <div>
+                {(showPhotoButton || showPasswordButton) && (
+                  <div style={{ marginBottom: '10px' }}>
+                    {showPhotoButton && (
+                         <div>
+                         <button
+                           onClick={handleEditPhoto}
+                           style={{ backgroundColor: '#00BFFF', borderRadius: '5px',color: 'white', padding: '5px' }}
+                         >
+                           Modifier ma photo
+                         </button>
+                         <input
+                           id="fileInput"
+                           type="file"
+                           accept="image/*"
+                           onChange={handleUploadPhoto}
+                           style={{ display: 'none' }}
+                         />
+                         
+                             </div>
+                    )}
+                    {showPasswordButton && (
+                      <button color="primary"
+                        onClick={handleEditPassword}
+                        style={{ backgroundColor: '#FF6347',marginTop:'8px', color: 'white', padding: '5px', borderRadius: '5px' }}
+                      >
+                        Modifier mot de passe
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {isEditing ? (
+                  <div className="form-container" style={{marginLeft:'550px',marginTop:'-150px'}} >
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleUpdateProfile();
+                      }}
+                    >
+                      <div className="mb-3">
+                        <label htmlFor="username" className="form-label">Nom utilisateur</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="username"
+                          value={updatedUsername}
+                          onChange={(e) => setUpdatedUsername(e.target.value)}
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="email" className="form-label">Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="email"
+                          value={updatedEmail}
+                          onChange={(e) => setUpdatedEmail(e.target.value)}
+                        />
+                      </div>
+                      <Button  className="primary"  type="submit" color="primary"  style={{ backgroundColor: '#00BFFF', marginRight: '10px',color: 'white', padding: '12px', cursor: 'pointer', borderRadius: '5px' }}>
+                       Modifier
+                      </Button>
+                      <Button className="secondary"  onClick={handleCancelEdit} color="secondary"  style={{ backgroundColor: '#FF6347', color: 'white', cursor: 'pointer', borderRadius: '5px',padding: '12px' }}>
+                        Annuler
+                      </Button>
+                    </form>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      onClick={handleEditProfile}
+                      style={{ backgroundColor: '#00BFFF', color: 'white', padding: '5px', cursor: 'pointer', borderRadius: '5px' }}
+                    >
+                      Modifier le profil
+                    </button>
+                  </div>
+                )}
+              </div>
+              <br />
+            </ArgonBox>
+          </Card>
+        </ArgonBox>
+
+      <Dialog open={changePasswordDialogOpen} onClose={handleClosePasswordDialog}>
+  <DialogTitle>Modifier le mot de passe</DialogTitle>
+  <DialogContent>
+    <Form style={{ padding: '100px' }}> {/* Supprimer la largeur définie pour le formulaire */}
+      <Form.Group controlId="formOldPassword">
+        <Form.Label>Ancien mot de passe</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Enter old password"
+          value={oldPassword}
+          onChange={(e) => setOldPassword(e.target.value)}
+          className="form-control-lg"
+          style={{ width: '100%' }} // Utiliser la largeur maximale
+        />
+      </Form.Group>
+
+      <Form.Group controlId="formNewPassword">
+        <Form.Label>Nouveau mot de passe</Form.Label>
+        <Form.Control
+          type="password"
+          placeholder="Enter new password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          className="form-control-lg"
+          style={{ width: '100%' }} // Utiliser la largeur maximale
+        />
+      </Form.Group>
+
+      <Form.Group controlId="formConfirmPassword">
+        <Form.Label>Confirmation du mot de passe</Form.Label>
+        <Form.Control
+          type="password"
+          placeholder="Confirm new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className="form-control-lg"
+          style={{ width: '100%' }} // Utiliser la largeur maximale
+        />
+      </Form.Group>
+    </Form>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleClosePasswordDialog}>Fermer</Button>
+    <Button onClick={handleSavePassword} variant="contained" style={{ backgroundColor: '#00BFFF', color: 'white' }}>
+      Enregistrer
+    </Button>
+    {errorMessage && <div className="error-message">{errorMessage}</div>}
+
+{successMessage && <div className="success-message">{successMessage}</div>}
+  </DialogActions>
+</Dialog>
+
+
+
+<Grid container spacing={2}>
+            {bilanDocuments.map((evenement) => (
+              <Grid style={{margin:'50px'}}item key={evenement._id} xs={12} sm={6} md={4} lg={3}>
+                <Card className="event-card">
+                  {/*   
+                  <CardMedia
+                    component="img"
+                    height="140"
+                    image={`http://localhost:5000/Evenements/${evenement.image}`}
+                    alt={evenement.titre}
+                  />
+                  */}
+                  <CardContent>
+                    
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Description:</strong> {evenement.description}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Date:</strong> {evenement.date}
+                    </Typography>
+                    <Typography gutterBottom variant="h6" component="div">
+                      <strong>Type:</strong> {evenement.type}
+                    </Typography>
+                    {/* Vous pouvez ajouter d'autres informations de l'événement ici */}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+    </div>
+      </ArgonBox>
+    </DashboardLayout>
+  );
+}
+
+export default Dashboard;

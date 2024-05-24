@@ -6,6 +6,7 @@ const userSchema = new Schema({
     email: { type: String, required: true },
     telephone: { type: Number, required: true },
     password: { type: String, required: true },
+    archive: { type: Boolean, required: true ,default:false},
     roles: { type: [String], default: ['user'] },
     formations: { type: [Schema.Types.ObjectId], ref: 'Formation', default: [] },
     sessionformateur: [{ type: Schema.Types.ObjectId, ref: 'Session' }],

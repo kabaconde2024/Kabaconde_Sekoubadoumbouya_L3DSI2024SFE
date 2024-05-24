@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const sessionSchema = new Schema({
-    formation: { type: Schema.Types.ObjectId, ref: 'Formation', required: true },
+    titre: { type: String, required: true },
     date: {  type: Date, required: true },
     dateFin: {  type: Date, required: true },
     lieu: { type: String, required: true },
@@ -10,10 +10,7 @@ const sessionSchema = new Schema({
     prix: { type: Number, required: true },
     remarque: { type: String, required: true },
     userSession:{type: Schema.Types.ObjectId, ref: 'User' },
-    MontantRestant: {
-        type: Number,
-        required: true
-      },
+
 
 
 });

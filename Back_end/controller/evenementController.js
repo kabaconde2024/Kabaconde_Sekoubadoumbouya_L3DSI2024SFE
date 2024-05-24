@@ -45,7 +45,7 @@ const ajoutEvenement = async (req, res) => {
 const getEvenement = async (req, res) => {
     try {
       // Récupérez la liste des événements
-      const evenements = await Evenement.find();
+      const evenements = await Evenement.find({ archive: false });
       res.json(evenements);
     } catch (error) {
       console.error("Erreur lors de la récupération des événements :", error);
@@ -55,27 +55,27 @@ const getEvenement = async (req, res) => {
 
   const supprimerEvenement = async (req, res) => {
     const { id } = req.params;
-  
-    try {
-      // Vérifiez si l'ID est valide
-      if (!id) {
-        return res.status(400).json({ message: 'ID d\'événement invalide.' });
-      }
-  
-      // Supprimez l'événement de la base de données
-      const result = await Evenement.deleteOne({ _id: id });
-  
-      // Vérifiez si l'événement a été supprimé avec succès
-      if (result.deletedCount === 0) {
-        return res.status(404).json({ message: 'Événement non trouvé.' });
-      }
-  
-      // Répondre avec succès
-      res.status(200).json({ message: 'Événement supprimé avec succès.' });
-    } catch (error) {
-      console.error('Erreur lors de la suppression de l\'événement :', error);
-      res.status(500).json({ message: 'Une erreur est survenue lors de la suppression de l\'événement.' });
+
+  try {
+    // Vérifiez si l'ID est valide
+    if (!id) {
+      return res.status(400).json({ message: "ID d'événement invalide." });
     }
+
+    // Mettez à jour le champ 'archive' à true
+    const result = await Evenement.updateOne({ _id: id }, { $set: { archive: true } });
+
+    // Vérifiez si l'événement a été mis à jour avec succès
+    if (result.nModified === 0) {
+      return res.status(404).json({ message: "Événement non trouvé." });
+    }
+
+    // Répondre avec succès
+    res.status(200).json({ message: "Événement archivé avec succès." });
+  } catch (error) {
+    console.error("Erreur lors de l'archivage de l'événement :", error);
+    res.status(500).json({ message: "Une erreur est survenue lors de l'archivage de l'événement." });
+  }
   };
 
   

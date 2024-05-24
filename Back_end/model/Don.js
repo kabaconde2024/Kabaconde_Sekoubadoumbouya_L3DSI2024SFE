@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const DonSchema = new Schema({
     
-    intitule: { type: String, required: true }, 
+    donateur: { type: String,required: true}, 
     description: { type: String, required: true }, 
     date: { type: Date, required: true }, 
     montant: { type: Number, required: true },
