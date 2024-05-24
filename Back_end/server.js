@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
-const stripe = require('stripe')('sk_test_51OuEfcRuWErPhnDe00PMhcbxFWXVZOd950QjBWk8JxnG4Z9n9A1XUuiQ82MMbM2cXisvmer8mPMVWmy7ocGE9d2300tIundsmy');
+const stripe = require('stripe')('sk_test_51OuEfnCqxrSciSMnnyaaPwvGLxW4BdkIF2UdBwBrbEe92KYXfrFww2qwD1rzWW1e3WyJbEzFnnOA9afgPcpLoLr700WrDYu5HF');
 const demandeAdehesion = require('./routes/demandeAdehesion');
 
 
@@ -72,13 +72,6 @@ app.use('/api/payement', require('./routes/payement'));
 app.use('/api/demandeAdehesion', require('./routes/demandeAdehesion'));
 app.use('/api/depense', require('./routes/depense'));
 app.use('/api/don', require('./routes/don'));
-
-
-
-
-
-
-
 
 app.post('/api/images/uploadImage/:userId', upload.single('image'), (req, res) => {
     try {
