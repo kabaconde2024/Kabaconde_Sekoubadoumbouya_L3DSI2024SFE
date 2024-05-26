@@ -1,0 +1,181 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import Card from "@mui/material/Card";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import Avatar from '@mui/material/Avatar';
+import Typography from '@mui/material/Typography';
+import { Link } from 'react-router-dom';
+
+
+function Test() {
+  const [userProfile, setUserProfile] = useState({});
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [updatedUsername, setUpdatedUsername] = useState('');
+  const [updatedEmail, setUpdatedEmail] = useState('');
+  const [userId, setUserId] = useState('');
+  const [image, setImage] = useState('');
+
+  const handleViewProfileClick = () => {
+    // Fonction vide car l'ouverture du formulaire est gérée dans le composant Voir
+};
+  useEffect(() => {
+    const storedUsername = sessionStorage.getItem('username');
+    const storedEmail = sessionStorage.getItem('email');
+    const storedUserId = sessionStorage.getItem('userId');
+
+    setUserProfile({
+      username: storedUsername,
+      email: storedEmail,
+    });
+    setUserId(storedUserId);
+  }, []);
+
+  const handleFormOpen = () => {
+    setIsFormOpen(true);
+    setUpdatedUsername(userProfile.username);
+    setUpdatedEmail(userProfile.email);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/auth/updateUserById/${userId}`, {
+        username: updatedUsername,
+        email: updatedEmail,
+      });
+
+      sessionStorage.setItem('username', updatedUsername);
+      sessionStorage.setItem('email', updatedEmail);
+
+      setUserProfile({
+        ...userProfile,
+        username: updatedUsername,
+        email: updatedEmail,
+      });
+
+      handleFormClose();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil utilisateur :', error.message);
+    }
+  };
+
+  const handleUploadPhoto = async (event) => {
+    try {
+      const file = event.target.files[0];
+  
+      const formData = new FormData();
+      formData.append('image', file);
+  
+      const response = await axios.post(`http://localhost:5000/api/images/uploadImage/${userId}`, formData);
+  
+      if (response.data.imageURL) {
+        localStorage.setItem(`profileImage_${userId}`, response.data.imageURL);
+  
+        setImage(response.data.imageURL);
+        console.log(" Les Donnees :" + response.data.imageURL);
+      } else {
+        console.error('Erreur: Aucune URL d\'image renvoyée par le serveur.');
+      }
+    } catch (error) {
+      console.error('Erreur lors du téléchargement de la photo de profil :', error.message);
+    }
+  };
+
+  React.useEffect(() => {
+    const storedImage = localStorage.getItem(`profileImage_${userId}`);
+    if (storedImage) {
+      setImage(storedImage);
+    }
+  }, [userId]); 
+  
+  return (
+    <div>
+      <DashboardLayout>
+        <DashboardNavbar />
+        <ArgonBox py={3}>
+          <Card>
+            <ArgonBox p={3}>
+              <Typography gutterBottom variant="h5" component="div" style={{ marginBottom: '16px', fontSize: '2rem', fontWeight: 'bold', color: '#3f51b5', fontFamily: 'Arial, sans-serif', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)' }}>
+              Profil Utilisateur
+               </Typography>
+             <Avatar alt={userProfile.username} src={image}   sx={{ width: 100, height: 100 }}/>
+             <DialogContent>
+                <div>
+                  <strong>{userProfile.username}</strong>
+                </div>
+                <div>
+                  <strong>{userProfile.email} </strong>
+                </div>
+              </DialogContent>
+              <div>
+              <Button
+    component={Link}
+    to={{
+        pathname: "/voir",
+        state: { userProfile: userProfile } // Passer les données de l'utilisateur ici
+    }}
+    startIcon={<EditIcon />}
+>
+    Voir profil
+</Button>
+
+
+              </div>
+            </ArgonBox>
+          </Card>
+        </ArgonBox>
+      </DashboardLayout>
+
+      <Dialog open={isFormOpen} onClose={handleFormClose}>
+        <DialogTitle>Modifier le profil</DialogTitle>
+        <DialogContent>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleUpdateProfile();
+            }}
+          >
+            <div className="mb-3">
+              <label htmlFor="username" className="form-label">Nom utilisateur</label>
+              <input
+                type="text"
+                className="form-control"
+                id="username"
+                value={updatedUsername}
+                onChange={(e) => setUpdatedUsername(e.target.value)}
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="email" className="form-label">Email</label>
+              <input
+                type="email"
+                className="form-control"
+                id="email"
+                value={updatedEmail}
+                onChange={(e) => setUpdatedEmail(e.target.value)}
+              />
+            </div>
+            <Button type="submit" color="primary">
+              Enregistrer les modifications
+            </Button>
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleFormClose} color="secondary">
+            Annuler
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+}
+
+export default Test;

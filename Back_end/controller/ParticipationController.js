@@ -49,27 +49,42 @@ const ajouterparticiaption = async (req, res) => {
     }
 };
 
+const countParticipation = async (req, res) => {
+    try {
+      // Compter toutes les participations dans la base de données
+      const count = await Participation.countDocuments();
+  
+      res.status(200).json({ count });
+    } catch (error) {
+      console.error('Erreur lors du comptage des participations :', error.message);
+      res.status(500).json({ message: 'Erreur lors du comptage des participations.' });
+    }
+  };
 
+  
 
-const afficherparticipation = async (req, res) => {
+  const afficherparticipation = async (req, res) => {
     try {
         const userId = req.params.id;
         console.log('ID de l\'utilisateur dans la requête :', userId);
 
         // Recherchez les participations de l'utilisateur dans la collection Participation
-        const userParticipations = await Participation.find({ user: userId });
+        const userParticipations = await Participation.find({ user: userId }).populate('user').populate('session');
 
         // Créez un tableau pour stocker les détails des sessions
         let sessionDetails = [];
 
-        // Pour chaque participation de l'utilisateur, recherchez les détails de la session
+        // Pour chaque participation de l'utilisateur, ajoutez les détails de la session au tableau
         for (let participation of userParticipations) {
-            // Recherchez les détails de la session à partir de l'identifiant de session
-            const session = await Session.findById(participation.session);
-            // Si la session est trouvée, ajoutez ses détails au tableau
-            if (session) {
-                sessionDetails.push(session);
-            }
+            sessionDetails.push({
+                username: participation.user.username,
+                titre: participation.session.titre,
+                prix: participation.session.prix,
+                capacite: participation.session.capacite,
+                lieu: participation.session.lieu,
+
+                // Ajoutez d'autres détails de session si nécessaire
+            });
         }
 
         console.log('Détails des sessions auxquelles l\'utilisateur est inscrit :', sessionDetails);
@@ -81,15 +96,11 @@ const afficherparticipation = async (req, res) => {
     }
 };
 
-
 const afficherToutesParticipations = async (req, res) => {
     try {
         // Recherchez toutes les participations dans la collection Participation
         const participations = await Participation.find()
-            .populate({
-                path: 'session',
-                populate: { path: 'formation' } // Populate les détails de la formation associée à chaque session
-            })
+            .populate('session') // Populate les détails de chaque session
             .populate('user'); // Populate les détails de l'utilisateur associé à chaque participation
 
         // Envoyez les participations trouvées en réponse
@@ -145,4 +156,4 @@ const countParticipants = async (req, res) => {
 }
 
 
-module.exports = { countParticipants,afficherparticipation ,ajouterparticiaption,afficherToutesParticipations,updatedParticipation};
+module.exports = { countParticipants,countParticipation,afficherparticipation ,ajouterparticiaption,afficherToutesParticipations,updatedParticipation};

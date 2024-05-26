@@ -176,4 +176,49 @@ const getcollaborateurs= async (req, res) => {
     }
   };
 
-module.exports = { register ,login,ajouterRole,removeRole,getRoles,updateUserById,getcollaborateurs};
+
+  const updatePassword = async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        const resultat = await User.updateOne(
+            { _id: req.params.id },
+            { $set: { password: hashedPassword } }
+        );
+
+        if (resultat.nModified === 0) {
+            return res.status(404).json({ message: "Utilisateur non trouvé ou aucun changement apporté." });
+        }
+
+        res.status(200).json({ message: 'Mot de passe mis à jour avec succès.' });
+    } catch (erreur) {
+        console.error(erreur);
+        res.status(500).json({ message: "Erreur lors de la mise à jour du mot de passe." });
+    }
+};
+
+
+
+const comparePassword= async (req, res) => {
+    const userId = req.params.userId;
+    const { oldPassword } = req.body;
+  
+    try {
+      // Récupérez le mot de passe haché de l'utilisateur depuis la base de données
+      const user = await User.findById(userId);
+      const hashedPassword = user.password; // Assurez-vous que le champ de mot de passe dans votre modèle utilisateur est bien nommé 'password'
+  
+      // Comparez le mot de passe saisi avec le mot de passe haché
+      const passwordMatch = await bcrypt.compare(oldPassword, hashedPassword);
+  
+      // Renvoyez une réponse indiquant si les mots de passe correspondent
+      res.json({ passwordMatch });
+    } catch (error) {
+      console.error('Erreur lors de la comparaison des mots de passe :', error);
+      res.status(500).json({ message: 'Une erreur s\'est produite lors de la comparaison des mots de passe.' });
+    }
+  };
+
+
+module.exports = { register ,comparePassword,updatePassword,login,ajouterRole,removeRole,getRoles,updateUserById,getcollaborateurs};

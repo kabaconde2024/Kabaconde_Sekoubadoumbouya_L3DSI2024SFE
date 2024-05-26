@@ -7,25 +7,24 @@ const Users = require('../model/User');
 
 const creerSession = async (req, res) => {
     try {
-        const { formation, dateDebut, dateFin, lieu, capacite, prix,remarque,userSession } = req.body;
+        const { titre, date, dateFin, lieu, capacite, prix,remarque,userSession } = req.body;
 
         // Créer une nouvelle session
         const nouvelleSession = new Sessions({
-            formation,
-            dateDebut,
+            titre,
+            date,
             dateFin,
             lieu,
             capacite,
             prix,
             remarque,
             userSession,
+
         });
 
         // Sauvegarder la session dans la base de données
         await nouvelleSession.save();
 
-        // Mettre à jour la référence de session dans les formations associées
-        await Formation.updateMany({ _id: { $in: formation } }, { $push: { sessions: nouvelleSession._id } });
 
         // Mettre à jour la référence de sessionformateur dans les utilisateurs associés
         // Si userSession est un tableau d'IDs d'utilisateurs, vous pouvez mettre à jour chaque utilisateur
@@ -44,12 +43,25 @@ const creerSession = async (req, res) => {
 };
 
 
+const getSessionById = async (req, res) => {
+    try {
+        const session = await Sessions.findById(req.params.id);
+        
+        if (!session) {
+            return res.status(404).json({ message: 'Session non trouvée.' });
+        }
 
+        res.status(200).json(session);
+    } catch (error) {
+        console.error('Erreur lors de la récupération de la session :', error.message);
+        res.status(500).json({ error: 'Erreur lors de la récupération de la session.' });
+    }
+};
 
 const afficherSessions = async (req, res) => {
     try {
-        // Récupérer toutes les sessions de la base de données
-        const toutesLesSessions = await Sessions.find();
+        // Récupérer toutes les sessions de la base de données en incluant les détails de l'utilisateur formateur
+        const toutesLesSessions = await Sessions.find().populate('userSession');
 
         // Envoyer les sessions récupérées en réponse
         res.status(200).json(toutesLesSessions);
@@ -62,10 +74,11 @@ const afficherSessions = async (req, res) => {
 
 
 
+
 const updateSession = async (req, res) => {
     try {
         const { id } = req.params; // Récupérer l'ID à partir des paramètres de l'URL
-        const { dateDebut, dateFin, lieu, formateur, capacite,prix,userSession } = req.body;
+        const {titre, dateDebut, dateFin, lieu, formateur, capacite,prix,userSession } = req.body;
 
         // Vérifier si la session existe
         const existingSession = await Sessions.findById(id);
@@ -75,6 +88,8 @@ const updateSession = async (req, res) => {
         }
 
         // Mettre à jour les propriétés de la session
+        existingSession.titre = titre || existingSession.titre;
+
         existingSession.dateDebut = dateDebut || existingSession.dateDebut;
         existingSession.dateFin = dateFin || existingSession.dateFin;
         existingSession.lieu = lieu || existingSession.lieu;
@@ -265,8 +280,40 @@ const updateSessionPrice = async (req, res) => {
     }
   };
 
+  const sessionformationencours=async(req, res)=>{
 
+        
+  }
+  /*
 
+  
+
+  const mettreAJourMontantRestant = async (req, res) => {
+    try {
+        const { id } = req.params; // Récupérer l'ID à partir des paramètres de l'URL
+        const { MontantRestant} = req.body;
+
+        // Vérifier si la formation existe
+        const existingSessions = await Sessions.findById(id);
+
+        if (!existingSessions) {
+            return res.status(404).json({ message: 'Sessions non trouvée.' });
+        }
+
+        // Mettre à jour les propriétés de la formation
+        existingSessions.MontantRestant = MontantRestant || existingSessions.MontantRestant;
+        
+
+        // Sauvegarder les modifications dans la base de données
+        await existingSessions.save();
+
+        res.status(200).json({ message: 'Formation mise à jour avec succès.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour de la formation.' });
+    }
+};
+  */
             
 
 module.exports = {
@@ -277,4 +324,5 @@ module.exports = {
     afficherDetailsSession,
     sessionsFormateur,
     updateSessionPrice,
+    getSessionById,
 };

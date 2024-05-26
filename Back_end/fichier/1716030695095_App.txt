@@ -1,0 +1,883 @@
+import { useState, useEffect, useMemo } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import Icon from "@mui/material/Icon";
+import ArgonBox from "components/ArgonBox";
+import Sidenav from "examples/Sidenav";
+import Configurator from "examples/Configurator";
+import theme from "assets/theme";
+import themeRTL from "assets/theme/theme-rtl";
+import themeDark from "assets/theme-dark";
+import themeDarkRTL from "assets/theme-dark/theme-rtl";
+import Dashboard from "layouts/dashboard/Dashboard";
+import Collaborateurs from "layouts/Collaborateurs/collaborateur";
+import Payement from "layouts/Payements/Payement";
+import Adherents from "layouts/Adherents/Adherents";
+import Adherent from "layouts/Adherents/Adherent";
+import Formation from "layouts/Formations/Formation";
+import Formationassures from "layouts/Formations/Formationassures";
+import Formationsuivies from "layouts/Formations/Formationsuivies";
+import Touteslesformations from "layouts/Formations/Touteslesformations";
+import ListesInscrit from "layouts/Formations/ListesInscrit";
+
+
+import Depense from "layouts/Finances/Depense";
+import Revenus from "layouts/Finances/Revenus";
+import Don from "layouts/Finances/Don";
+
+import Information from "layouts/Informations/Information";
+import Evenement from "layouts/Evenements/Evenement";
+import Test from "layouts/Evenements/Test";
+import Voir from "layouts/Evenements/Voir";
+
+
+
+import EvenementUsers from "layouts/Evenements/EvenementUsers";
+import Profile from "layouts/profile";
+import Connexion from "layouts/authentication/Connexions/Connexion";
+import Inscription from "layouts/authentication/Inscriptions/Inscription";
+import ListeAdhesion from "layouts/Adhesions/ListeAdhesion";
+import Adhesion from "layouts/Adhesions/Adhesion";
+import Avis from "layouts/Adhesions/Avis";
+import Historique from "layouts/Adhesions/Historique";
+import Reglement from "layouts/Adhesions/Reglement";
+
+import Sessions from "layouts/Sessions/Session";
+import rtlPlugin from "stylis-plugin-rtl";
+import { CacheProvider } from "@emotion/react";
+import createCache from "@emotion/cache";
+import routes from "routes";
+import { useArgonController, setMiniSidenav, setOpenConfigurator } from "context";
+import brand from "assets/images/logoadst.png";
+import brandDark from "assets/images/logoadst.png";
+import "assets/css/nucleo-icons.css";
+import "assets/css/nucleo-svg.css";
+import Actualite from "layouts/Actualites/Actualite";
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements} from '@stripe/react-stripe-js';
+import { FaListUl, FaCheck } from 'react-icons/fa'; // Importez les icônes de Font Awesome
+import {MdBookmark } from 'react-icons/md'; // Importez les icônes de Material-UI
+const stripePromise = loadStripe('pk_test_51OuEfcRuWErPhnDewu0XzfaZmTd4zIJtMmno40B9wsGtY3dC56x6DdIFp0WCLdPTA0RHM0jrmjvHXmNjs4nfqJR200LvigUTvP');
+
+export default function App() {
+  <Elements stripe={stripePromise}>
+      <Payement />
+    </Elements>
+ 
+  const userRole =sessionStorage.getItem("userRole") || "user";
+  const roles = userRole.split(',');
+  
+
+  const routesAdmin = [
+    {
+      type: "route",
+      name: "Dashboard",
+      key: "dashboard",
+      route: "/dashboard",
+      icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-tv-2" />,
+      component: <Dashboard />,
+    },
+
+
+
+    {
+      type: "collapse",
+      name: "Publications",
+     
+      key: "actualite",
+      icon: (
+        <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-notification-70" />
+      ),
+      collapse: [
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+              Créer Publication
+            </span>
+          ),
+          key: "creerActualites",
+          route: "/actualite/creer",
+          component: <Actualite  />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-send"
+              style={{ marginLeft: "50px" }}
+            />
+          ) // Icône pour "CREER DES ACTUALITES"
+        }
+        ,
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+              Publier
+            </span>
+          ),
+          key: "publication",
+          route: "/actualite/publication",
+          component: <Information />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-single-copy-04"
+              style={{ marginLeft: "50px" }}
+            />
+          ) // Icône pour "PUBLICATION"
+        }
+       
+      ]
+    },
+    {
+      type: "route",
+      name: "Gestion des collaborateurs",
+      key: "collaborateurs",
+      route: "/collaborateurs",
+      icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-badge" />,
+      component: <Collaborateurs />,
+    },
+    {
+      type: "route",
+      name: "Liste des inscrits",
+      key: "ListesInscrit",
+      route: "/ListesInscrit",
+      icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-badge" />,
+      component: <ListesInscrit/>,
+    },
+    {
+      type: "route",
+      name: "Gestion des utilisateurs",
+      key: "virtual-reality",
+      route: "/adherent",
+      icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-circle-08" />,
+      component: <Adherents />,
+    },
+    {
+      type: "route",
+      name: "Gestion des formations",
+      key: "formation",
+      route: "/formation",
+      icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-spaceship" />,
+      component: <Formation />,
+    },
+
+    
+    
+    {
+      type: "route",
+      name: "Gestion des evenements",
+      key: "evenement",
+      route: "/evenement",
+      icon: <ArgonBox component="i" color="error" fontSize="14px" className="ni ni-world-2" />,
+      component: <Evenement />,
+    },
+
+    
+    {
+      type: "route",
+      name: "Test",
+      key: "test",
+      route: "/test",
+      icon: <ArgonBox component="i" color="error" fontSize="14px" className="ni ni-world-2" />,
+      component: <Test />,
+    },
+
+    
+
+    {
+      type: "route",
+      name: "Mon profile",
+      key: "profile",
+      route: "/profile",
+      icon: <ArgonBox component="i" color="dark" fontSize="14px" className="ni ni-single-02" />,
+      component: <Profile />,
+    },
+    {
+      type: "route",
+      name: "Les démandes d'adhésion",
+      key: "listeAdhesion",
+      route: "/listeAdhesion",
+      icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-collection" />,
+      component: <ListeAdhesion />,
+    },
+   
+    {
+      type: "collapse",
+      name: "Gestion finance",
+     
+      key: "finance",
+      icon: (
+        <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-notification-70" />
+      ),
+      collapse: [
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+              Créer dépenses
+            </span>
+          ),
+          key: "creerDepense",
+          route: "/depense",
+          component: <Depense  />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-send"
+              style={{ marginLeft: "50px" }}
+            />
+          ) // Icône pour "CREER DES ACTUALITES"
+        }
+        ,
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+              Revenus
+            </span>
+          ),
+          key: "revenus",
+          route: "/revenus",
+          component: <Revenus />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-single-copy-04"
+              style={{ marginLeft: "50px" }}
+            />
+          ) // Icône pour "PUBLICATION"
+        }
+       
+      ]
+    },
+    
+      
+  ];
+
+
+  const routesUser = [
+    {
+      type: "route",
+      name: "Dashboard",
+      key: "dashboard",
+      route: "/dashboard",
+      icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-tv-2" />,
+      component: <Dashboard />,
+    },
+
+
+    {
+      type: "collapse",
+      name: "Espace adhérents ",
+      key: "adhesions",
+      route: "/adhesions",
+      icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-badge" />,
+      collapse: [
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+                Démandes adhésion       
+              </span>
+          ),
+          key: "demandeadhesion",
+          route: "/adhesion/demandeadhesion",
+          component: <Adhesion  />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-send"
+              style={{ marginLeft: "50px" }}
+            />
+          )
+        }
+        ,
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+              Historique
+            </span>
+          ),
+          key: "demandeadhesion",
+          route: "/adhesion/historique",
+          component: <Historique />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-books"
+              style={{ marginLeft: "50px" }}
+            />
+          )
+        },
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+              Reglement interieur 
+            </span>
+          ),
+          key: "demandeadhesion",
+          route: "/adhesion/reglement",
+          component: <Reglement />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-folder-17"
+              style={{ marginLeft: "50px" }}
+            />
+          )
+        },
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+                Avis            
+            </span>
+          ),
+          key: "demandeadhesion",
+          route: "/adhesion/avis",
+          component: <Avis />,
+          icon: (
+            <ArgonBox
+              component="i"
+              color="primary"
+              fontSize="14px"
+              className="ni ni-chat-round"
+              style={{ marginLeft: "50px" }}
+            />
+          ) 
+        }
+       
+      ]},    
+    {
+      type: "route",
+      name: "Actualités",
+      key: "adherent",
+      route: "/adherent",
+      icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-app" />,
+      component: <Adherent />,
+    },
+    
+    {
+      type: "route",
+      name: "Evenements",
+      key: "evenement",
+      route: "/evenement",
+      icon: <ArgonBox component="i" color="error" fontSize="14px" className="ni ni-world-2" />,
+      component: <EvenementUsers />,
+    },
+    
+    {
+      type: "route",
+      name: "Mon profile",
+      key: "profile",
+      route: "/profile",
+      icon: <ArgonBox component="i" color="dark" fontSize="14px" className="ni ni-single-02" />,
+      component: <Profile />,
+    }, 
+    {
+      type: "collapse",
+      name: "Offre de formation",
+      key: "offreFormation",
+      icon: (
+        <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-calendar-grid-58" />
+      ),
+      collapse: [
+        {
+          type: "route",
+          name: (
+                  <span style={{ marginLeft: "8px" }}>
+                    Toutes les formations     
+                    </span>         
+          ),
+          key: "touteslesformations",
+          route: "/touteslesformations",
+          component: <Touteslesformations />,
+          icon: <FaListUl style={{ marginLeft: "50px" }} /> // Icône de liste pour "Toutes les Formations"
+        },
+        {
+          type: "route",
+          name: (
+            <span style={{ marginLeft: "8px" }}>
+              Formation suivies
+            </span>
+          ),
+          key: "formationsuivies",
+          route: "/formationsuivies",
+          component: <Formationsuivies />,
+          icon: <MdBookmark style={{ marginLeft: "50px" }}/> // Icône de suivi pour "Formations Suivies"
+        },
+        {
+          type: "route",
+          name: (
+            <span  style={{ marginLeft: "8px" }} >             
+            Formation assurées        
+            </span>
+          ),
+          key: "formationsassures",
+          route: "/formationsassures",
+          component: <Formationassures />,
+          icon: <FaCheck style={{ marginLeft: "50px" }} /> // Icône de validation pour "Formations Assurées"
+        },
+      ],
+    },   
+
+
+    {
+      type: "route",
+      name: "SESSIONS",
+      key: "sessions",
+      route: "/session/:formationId", // Utilisation de :formationId pour accepter un paramètre dans l'URL
+      icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-calendar-grid-58" />,
+      component: <Sessions />,
+    },
+    {
+      type: "route",
+      name: "Don",
+      key: "don",
+      route: "/don", // Utilisation de :formationId pour accepter un paramètre dans l'URL
+      icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-calendar-grid-58" />,
+      component: <Don />,
+    },
+     
+    {
+      type: "route",
+      name: "Test",
+      key: "test",
+      route: "/test",
+      icon: <ArgonBox component="i" color="error" fontSize="14px" className="ni ni-world-2" />,
+      component: <Test />,
+    },
+   
+  ];
+
+  
+
+  const routesFormateur = [
+    
+   {
+     /*
+      type: "route",
+      key: "formateur",
+      name: "GESTION DES FORMATEURS",
+      route: "/Formations/formateur",
+      icon: <SupervisorAccountIcon />,
+      component: <Formateur />,
+      */
+    },
+    
+  ];
+
+  const routesAdherent = [
+    
+   {
+     /*
+      type: "route",
+      name: "GESTION DES ADHERENTS",
+      key: "adherent",
+      route: "/adherent",
+      icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-app" />,
+      component: <Adherent />,
+      */
+    },
+
+  ];
+
+
+  const routesCollaborateur = [
+    
+    {
+      type: "route",
+      name: "Gestion des collaborateurs",
+      key: "collaborateur",
+      route: "/collaborateur",
+      icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-badge" />,
+      component: <Collaborateurs />,
+    },
+    
+   
+    
+  ];
+
+
+let dashRoutes = [];
+
+roles.forEach((role) => {
+  console.log("role"+role);
+  switch (role.trim()) {
+    case "user":
+      dashRoutes.push(  ...routesUser);
+
+      break;
+    case "adherent":
+      dashRoutes.push( ...routesAdherent);
+      break;
+    case "collaborateur":
+      dashRoutes.push( ...routesCollaborateur);
+      break;
+      case "formateur":
+      dashRoutes.push(...routesFormateur);
+
+      break;
+    case "admin":
+      dashRoutes.push(...routesAdmin);
+      break;
+    default:
+      break;
+  }
+});
+
+dashRoutes.push({
+  type: "route",
+  key: "connexion",
+  route: "/authentication/connexion",
+  component: <Connexion />,
+});
+dashRoutes.push({
+  type: "route",
+  key: "sessions",
+  route: "/session/:formationId", // Utilisation de :formationId pour accepter un paramètre dans l'URL
+  component: <Sessions />,
+});
+
+dashRoutes.push({
+  type: "route",
+  key: "inscription",
+  route: "/authentication/inscription",
+  component: <Inscription />,
+});
+
+
+dashRoutes.push({
+  type: "route",
+  key: "voir",
+  route: "/voir",
+  component: <Voir />,
+});
+
+dashRoutes.push({
+  type: "route",
+  key: "billing",
+  route: "/payement",
+  component: 
+  <Elements stripe={stripePromise}>
+  <Payement />
+</Elements>,
+});
+
+
+
+dashRoutes = [...new Set(dashRoutes)];
+console.log("Filtered dashRoutes:", dashRoutes)
+
+
+  const [controller, dispatch] = useArgonController();
+  const { miniSidenav, direction, layout, openConfigurator, sidenavColor, darkSidenav, darkMode } = controller;
+  const [onMouseEnter, setOnMouseEnter] = useState(false);
+  const [rtlCache, setRtlCache] = useState(null);
+  const { pathname } = useLocation();
+
+  useMemo(() => {
+    const cacheRtl = createCache({
+      key: "rtl",
+      stylisPlugins: [rtlPlugin],
+    });
+
+    setRtlCache(cacheRtl);
+  }, []);
+
+  const handleOnMouseEnter = () => {
+    if (miniSidenav && !onMouseEnter) {
+      setMiniSidenav(dispatch, false);
+      setOnMouseEnter(true);
+    }
+  };
+
+  const handleOnMouseLeave = () => {
+    if (onMouseEnter) {
+      setMiniSidenav(dispatch, true);
+      setOnMouseEnter(false);
+    }
+  };
+
+  const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
+
+  useEffect(() => {
+    document.body.setAttribute("dir", direction);
+  }, [direction]);
+
+  useEffect(() => {
+    document.documentElement.scrollTop = 0;
+    document.scrollingElement.scrollTop = 0;
+  }, [pathname]);
+
+  const getRoutes = (allRoutes) =>
+    allRoutes.map((route) => {
+      if (route.collapse) {
+        return getRoutes(route.collapse);
+      }
+
+      if (route.route) {
+        return <Route exact path={route.route} element={route.component} key={route.key} />;
+      }
+
+      return null;
+    });
+
+  const configsButton = (
+    <ArgonBox
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      width="3.5rem"
+      height="3.5rem"
+      bgColor="white"
+      shadow="sm"
+      borderRadius="50%"
+      position="fixed"
+      right="2rem"
+      bottom="2rem"
+      zIndex={99}
+      color="dark"
+      sx={{ cursor: "pointer" }}
+      onClick={handleConfiguratorOpen}
+    >
+      <Icon fontSize="default" color="inherit">
+        settings
+      </Icon>
+    </ArgonBox>
+  );
+/*
+  let dashRoutes = [];
+
+  if (userRole === "admin") {
+    dashRoutes = [
+      {
+        type: "route",
+        name: "Dashboard",
+        key: "dashboard",
+        route: "/dashboard",
+        icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-tv-2" />,
+        component: <Dashboard />,
+      },
+      {
+        type: "route",
+        name: "Collaborateurs",
+        key: "tables",
+        route: "/collaborateurs",
+        icon: (
+          <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-calendar-grid-58" />
+        ),
+        component: <Collaborateurs/>,
+      },
+      {
+        type: "route",
+        name: "Payement",
+        key: "billing",
+        route: "/payement",
+        icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
+        component: <Payements />,
+      },
+      {
+        type: "route",
+        name: "Utilisateurs",
+        key: "virtual-reality",
+        route: "/adherent",
+        icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-app" />,
+        component: <Adherents />,
+      },
+      {
+        type: "route",
+        name: "Formation",
+        key: "formation",
+        route: "/formation",
+        icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-app" />,
+        component: <Formation />,
+      },
+      
+      {
+        type: "route",
+        name: "Evenement",
+        key: "evenement",
+        route: "/evenement",
+        icon: <ArgonBox component="i" color="error" fontSize="14px" className="ni ni-world-2" />,
+        component: <Evenement />,
+      },
+      {
+        type: "route",
+        name: "Profile",
+        key: "profile",
+        route: "/profile",
+        icon: <ArgonBox component="i" color="dark" fontSize="14px" className="ni ni-single-02" />,
+        component: <Profile />,
+      },
+      {
+        type: "route",
+        name: "Adhesion",
+        key: "adhesion",
+        route: "/adhesion",
+        icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-collection" />,
+        component: <Adhesion />,
+      },
+      {
+        type: "route",
+        key: "connexion",
+        route: "/authentication/connexion",
+      
+        component: <Connexion />,
+      },
+      {
+        type: "route",
+        key: "inscription",
+        route: "/authentication/inscription",
+        component: <Inscription />,
+      },
+        
+    ];
+
+  } else {
+    dashRoutes = [
+      {
+        type: "route",
+        name: "Dashboard",
+        key: "dashboard",
+        route: "/dashboard",
+        icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-tv-2" />,
+        component: <Dashboard />,
+      },
+   
+      {
+        type: "route",
+        name: "Payement",
+        key: "billing",
+        route: "/payement",
+        icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
+        component: <Payements />,
+      },
+   
+      {
+        type: "route",
+        name: "Offre de Formation",
+        key: "mesFormation",
+        route: "/mesFormation",
+        icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-app" />,
+        component: <MesFormation />,
+      },
+      
+      {
+        type: "route",
+        name: "Evenement",
+        key: "evenement",
+        route: "/evenement",
+        icon: <ArgonBox component="i" color="error" fontSize="14px" className="ni ni-world-2" />,
+        component: <Evenement />,
+      },
+      {
+        type: "route",
+        name: "Profile",
+        key: "profile",
+        route: "/profile",
+        icon: <ArgonBox component="i" color="dark" fontSize="14px" className="ni ni-single-02" />,
+        component: <Profile />,
+      },
+      {
+        type: "route",
+        name: "Adhesion",
+        key: "adhesion",
+        route: "/adhesion",
+        icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-collection" />,
+        component: <Adhesion />,
+      },
+      {
+        type: "route",
+        key: "connexion",
+        route: "/authentication/connexion",
+        component: <Connexion />,
+      },
+      {
+        type: "route",
+        key: "inscription",
+        route: "/authentication/inscription",
+        component: <Inscription />,
+      },
+    
+    ];
+  }
+  console.log("Filtered dashRoutes:", dashRoutes);
+  console.log("userRole in Admin:", userRole);*/
+  return direction === "rtl" ? (
+    <CacheProvider value={rtlCache}>
+      <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>
+        <CssBaseline />
+        {layout === "dashboard" && (
+          <>
+           <Sidenav
+  color={sidenavColor}
+  brand={darkSidenav || darkMode ? brand : brandDark}
+  brandName="ADST"
+  routes={dashRoutes}
+  onMouseEnter={handleOnMouseEnter}
+  onMouseLeave={handleOnMouseLeave}
+>
+  <img
+    src="assets/images/logoadst.png"
+    alt="Logo"
+    style={{ width: '100px', height: '100px' }}  
+  />
+
+</Sidenav>
+
+            <Configurator />
+            {configsButton}
+          </>
+        )}
+        {layout === "vr" && <Configurator />}
+        <Routes>
+          {getRoutes(dashRoutes)}
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </ThemeProvider>
+    </CacheProvider>
+  ) : (
+    <ThemeProvider theme={darkMode ? themeDark : theme}>
+      <CssBaseline />
+      {layout === "dashboard" && (
+        <>
+          <Sidenav
+            color={sidenavColor}
+            brand={darkSidenav || darkMode ? brand : brandDark}
+            brandName="ADST"
+            routes={dashRoutes}
+            onMouseEnter={handleOnMouseEnter}
+            onMouseLeave={handleOnMouseLeave}
+          />
+          <Configurator />
+          {configsButton}
+        </>
+      )}
+      {layout === "vr" && <Configurator />}
+      <Routes>
+        {getRoutes(dashRoutes)}
+        <Route path="*" element={<Navigate to="/authentication/connexion" />} />
+      </Routes>
+    </ThemeProvider>
+  );
+}

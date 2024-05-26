@@ -8,18 +8,13 @@ const Don = require('../model/Don');
 const creerDon = async (req, res) => {
     try {
 
-        const {intitule, description, date,montant } = req.body;
+        const {donateur, description, date,montant } = req.body;
 
-        // Vérifier si la Depense existe déjà
-        const existingDon = await Don.findOne({ intitule });
-
-        if (existingDon) {
-            return res.status(400).json({ message: 'Cette Don existe déjà.' });
-        }
+      
 
         // Créer une nouvelle formation
         const nouvelleDon = new Don({
-            intitule,
+            donateur,
             description,
             date,
             montant,

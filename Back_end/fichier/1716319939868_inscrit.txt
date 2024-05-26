@@ -1,0 +1,667 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import { Row, Col, Card, CardHeader, CardBody, Pagination, PaginationItem, PaginationLink } from 'reactstrap';
+import Stack from '@mui/material/Stack';
+import {useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import PrintIcon from '@mui/icons-material/Print';
+import { Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, Button } from 'reactstrap';
+
+
+
+
+function ListesInscrit() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [participations, setParticipations] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [itemsPerPage] = useState(1);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchParticipations = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/participation/afficherToutesParticipations');
+        console.log('Données des participations reçues depuis l\'API :', response.data);
+        setParticipations(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des participations :', error.message);
+      }
+    };
+    fetchParticipations();
+  }, []);
+
+  const filteredParticipations = participations.filter(participation => (
+    participation.user ? participation.user.username.toLowerCase().includes(searchQuery.toLowerCase()) : false
+  ));
+
+  const indexOfLastParticipation = currentPage * itemsPerPage;
+  const indexOfFirstParticipation = indexOfLastParticipation - itemsPerPage;
+  const currentParticipations = filteredParticipations.slice(indexOfFirstParticipation, indexOfLastParticipation);
+
+  const pageCount = Math.ceil(filteredParticipations.length / itemsPerPage);
+
+  ///////////////////////////////////////////////
+
+
+
+// Définissez etat dans useState
+const [etat, setEtat] = useState('En attente');
+
+// Modifiez la fonction handleEtatChange pour mettre à jour etat
+const handleEtatChange = (event) => {
+  setEtat(event.target.value);
+};
+
+// Modifiez la fonction updateEtat pour utiliser etat
+const updateEtat = async (participation) => {
+  try {
+    if (!participation) {
+      console.error('Participation non définie.');
+      return;
+    }
+    await axios.put(`http://localhost:5000/api/participation/updatedParticipation/${participation._id}`, { etat });
+    alert('L\'état de la participation a été mis à jour avec succès.');
+    
+    // Actualiser les participations après la mise à jour
+    const response = await axios.get('http://localhost:5000/api/participation/afficherToutesParticipations');
+    setParticipations(response.data);
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de l\'état de la participation :', error);
+    alert('Une erreur s\'est produite lors de la mise à jour de l\'état de la participation.');
+  }
+};
+
+
+
+ 
+
+  /////////////////////////////////////////Payement//////////////////////////
+  /*
+  const [payement, setPayement] = useState([]);
+
+  useEffect(() => {
+    const fetchPayement = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/payement/recupererPaiements');
+        console.log('Données des participations reçues depuis l\'API :', response.data);
+        setPayement(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des participations :', error.message);
+      }
+    };
+    fetchPayement();
+  }, []);
+*/
+  //////////////////////////////////////Payement
+  const Impression = async () => {
+    // Créer une nouvelle instance de jsPDF
+    const doc = new jsPDF();
+  
+    // Définir les styles
+    doc.setFont('Arial', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+  
+    // Définir le contenu du fichier PDF
+    doc.text(`Informations de paiement :`, 10, 10);
+    doc.text(`Prix payé : ${paymentInfo.price}`, 10, 20);
+    doc.text(`Date de paiement : ${paymentInfo.date}`, 10, 30);
+    doc.text(`Mode de Paiement : ${paymentInfo.mode}`, 10, 40);
+    doc.text(`Identifiant de l'utilisateur : ${paymentInfo.userId}`, 10, 50);
+    doc.text(`Identifiant de la session : ${paymentInfo.session}`, 10, 60);
+  
+    // Enregistrer le fichier PDF
+    doc.save('reçudupaiement.pdf');
+  };
+  
+
+
+  ////////////////////////////////////////////////////
+
+//partie payement
+
+const [isOpen, setIsOpen] = useState(false); // Variable d'état pour contrôler l'ouverture et la fermeture du modal
+const [paymentInfo, setPaymentInfo] = useState({
+  price: '',
+  date: new Date().toISOString().slice(0, 10),
+  mode: '',
+  userId: '',
+  session: '',
+});
+
+const toggleModal = (participation) => {
+  setIsOpen(!isOpen); // Inverse la valeur de isOpen pour ouvrir ou fermer le modal
+  // Mettez à jour les informations de paiement avec les données de participation
+  setPaymentInfo({
+    ...paymentInfo,
+    userId: participation.user ? participation.user._id : '',
+    session: participation.session ? participation.session._id : '',
+  });
+};
+
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setPaymentInfo({ ...paymentInfo, [name]: value });
+};
+
+const handleSubmit = async (participation, e) => {
+  e.preventDefault(); // Empêche le comportement de soumission par défaut du formulaire
+  try {
+    
+    
+    console.log('userId:', paymentInfo.userId);
+    console.log('session:', paymentInfo.session);
+
+    const response = await axios.post('http://localhost:5000/api/payement/EffectuerPayement', paymentInfo);
+    toggleModal(); // Ferme le modal après le paiement réussi
+  } catch (error) {
+    console.error('Erreur lors du paiement :', error.message);
+    alert('Une erreur s\'est produite lors du paiement.');
+  }
+};
+
+
+
+
+  return (
+    <DashboardLayout>
+      <DashboardNavbar />
+      <ArgonBox py={3}>
+        <div className="content">
+          <Row>
+            <Col md={12}>
+              <Card>
+                <CardHeader>
+                  <h1 className="p1">Les Participations</h1>
+                  <div style={{ marginBottom: '10px', marginLeft: '980px' }}>
+                    <form className="d-flex" onSubmit={(e) => e.preventDefault()}>
+                      <input style={{ padding: '10px', marginRight: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '300px' }} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
+                    </form>
+                  </div><br /><br />
+                </CardHeader>
+                <CardBody>
+                  <div className="table-responsive">
+                    <Stack>
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Username</th>
+                            {/* <th scope="col">email</th>*/}
+                            <th scope="col">Telephnoe</th>
+                            <th scope="col">Date Debut</th>
+                            <th scope="col">Date Fin</th>
+                            <th scope="col">Lieu</th>
+                           {/* <th scope="col">Capacite</th>*/}
+                            <th scope="col">Formation</th>
+                            <th scope="col">Prix </th>
+                            <th scope="col"> Payement</th>
+                            <th scope="col"> Reçu</th>
+                           {/*  <th scope="col"> Observation</th>*/}
+
+
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {currentParticipations.map((participation, index) => (
+  <tr key={index}>
+    <td>{participation.user ? participation.user.username : '-'}</td>
+    <td>{participation.user ? participation.user.telephone : '-'}</td>
+    <td>{participation.session ? participation.session.dateDebut : '-'}</td>
+    <td>{participation.session ? participation.session.dateFin : '-'}</td>
+    <td>{participation.session ? participation.session.lieu : '-'}</td>
+    <td>{participation.session && participation.session.formation ? participation.session.formation.titre : '-'}</td>
+    <td>{participation.session && participation.session ? `${participation.session.prix} DT` : '-'}</td>
+
+
+    <td>{participation.session ? participation.user._id : '-'}</td>
+    <td>{participation.session ? participation.session._id : '-'}</td>
+
+   
+        <td>
+        <Button color="primary" onClick={() => toggleModal(participation)}>Payez</Button>
+      </td>
+
+    <td>
+        <button style={{ margin: '10px',border:'2px white  dotted' }} onClick={() => Impression(participation)}>
+          <PrintIcon /> Imprimer
+        </button>
+      </td>
+  </tr>
+))}
+
+                        </tbody>
+                      </table>
+                      <Pagination style={{ marginTop: '20px', fontSize: '1.2rem' }}>
+                        <PaginationItem disabled={currentPage === 1}>
+                          <PaginationLink previous onClick={() => paginate(currentPage - 1)} />
+                        </PaginationItem>
+                        {Array.from({ length: pageCount }, (_, i) => (
+                          <PaginationItem key={i} active={i + 1 === currentPage}>
+                            <PaginationLink onClick={() => paginate(i + 1)}>{i + 1}</PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem disabled={currentPage === pageCount}>
+                          <PaginationLink next onClick={() => paginate(currentPage + 1)} />
+                        </PaginationItem>
+                      </Pagination>
+                    </Stack>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+        <div>
+        <Modal isOpen={isOpen} toggle={toggleModal}>
+        <ModalHeader toggle={toggleModal}>Formulaire de paiement</ModalHeader>
+        <ModalBody>
+        <form onSubmit={(e) => handleSubmit(participations, e)}>
+            <FormGroup>
+              <Label for="price">Prix:</Label>
+              <Input type="number" name="price" id="price" value={paymentInfo.price} onChange={handleInputChange} required />
+            </FormGroup>
+            <FormGroup>
+              <Label for="date">Date:</Label>
+              <Input type="date" name="date" id="date" value={paymentInfo.date} onChange={handleInputChange} required />
+            </FormGroup>
+            <FormGroup>
+              <Label for="mode">Mode de paiement:</Label>
+              <Input type="select" name="mode" id="mode" value={paymentInfo.mode} onChange={handleInputChange} required>
+                <option value="">Sélectionnez un mode de paiement</option>
+                <option value="Carte de crédit">Carte de crédit</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Virement bancaire">Virement bancaire</option>
+              </Input>
+            </FormGroup>
+            <Button type="submit" color="primary" style={{margin:'5px'}}>Enregistrez</Button>
+            <Button color="secondary" onClick={toggleModal}>Fermer</Button>
+          </form>
+        </ModalBody>
+      </Modal>
+    </div>
+      </ArgonBox>
+    </DashboardLayout>
+  );
+}
+
+export default ListesInscrit;  
+
+
+**********************************************************************************************************
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import { Row, Col, Card, CardHeader, CardBody, Pagination, PaginationItem, PaginationLink } from 'reactstrap';
+import Stack from '@mui/material/Stack';
+import {useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import PrintIcon from '@mui/icons-material/Print';
+import { Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, Button } from 'reactstrap';
+
+
+
+
+function ListesInscrit() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [participations, setParticipations] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [itemsPerPage] = useState(1);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchParticipations = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/participation/afficherToutesParticipations');
+        console.log('Données des participations reçues depuis l\'API :', response.data);
+        setParticipations(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des participations :', error.message);
+      }
+    };
+    fetchParticipations();
+  }, []);
+
+  const filteredParticipations = participations.filter(participation => (
+    participation.user ? participation.user.username.toLowerCase().includes(searchQuery.toLowerCase()) : false
+  ));
+
+  const indexOfLastParticipation = currentPage * itemsPerPage;
+  const indexOfFirstParticipation = indexOfLastParticipation - itemsPerPage;
+  const currentParticipations = filteredParticipations.slice(indexOfFirstParticipation, indexOfLastParticipation);
+
+  const pageCount = Math.ceil(filteredParticipations.length / itemsPerPage);
+
+  ///////////////////////////////////////////////
+
+
+
+// Définissez etat dans useState
+const [etat, setEtat] = useState('En attente');
+
+// Modifiez la fonction handleEtatChange pour mettre à jour etat
+const handleEtatChange = (event) => {
+  setEtat(event.target.value);
+};
+
+// Modifiez la fonction updateEtat pour utiliser etat
+const updateEtat = async (participation) => {
+  try {
+    if (!participation) {
+      console.error('Participation non définie.');
+      return;
+    }
+    await axios.put(`http://localhost:5000/api/participation/updatedParticipation/${participation._id}`, { etat });
+    alert('L\'état de la participation a été mis à jour avec succès.');
+    
+    // Actualiser les participations après la mise à jour
+    const response = await axios.get('http://localhost:5000/api/participation/afficherToutesParticipations');
+    setParticipations(response.data);
+  } catch (error) {
+    //console.error('Erreur lors de la mise à jour de l\'état de la participation :', error);
+    alert('Une erreur s\'est produite lors de la mise à jour de l\'état de la participation.');
+  }
+};
+
+
+
+ 
+
+  /////////////////////////////////////////Payement//////////////////////////
+  /*
+  const [payement, setPayement] = useState([]);
+
+  useEffect(() => {
+    const fetchPayement = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/payement/recupererPaiements');
+        console.log('Données des participations reçues depuis l\'API :', response.data);
+        setPayement(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des participations :', error.message);
+      }
+    };
+    fetchPayement();
+  }, []);
+*/
+  //////////////////////////////////////Payement
+  const Impression = async () => {
+    // Créer une nouvelle instance de jsPDF
+    const doc = new jsPDF();
+  
+    // Définir les styles
+    doc.setFont('Arial', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+  
+    // Définir le contenu du fichier PDF
+    doc.text(`Informations de paiement :`, 10, 10);
+    doc.text(`Prix payé : ${paymentInfo.price}`, 10, 20);
+    doc.text(`Date de paiement : ${paymentInfo.date}`, 10, 30);
+    doc.text(`Mode de Paiement : ${paymentInfo.mode}`, 10, 40);
+    doc.text(`Identifiant de l'utilisateur : ${paymentInfo.userId}`, 10, 50);
+    doc.text(`Identifiant de la session : ${paymentInfo.session}`, 10, 60);
+  
+    // Enregistrer le fichier PDF
+    doc.save('reçudupaiement.pdf');
+  };
+  
+
+
+  ////////////////////////////////////////////////////
+
+//partie payement
+
+const [isOpen, setIsOpen] = useState(false); // Variable d'état pour contrôler l'ouverture et la fermeture du modal
+const [paymentInfo, setPaymentInfo] = useState({
+  price: '',
+  date: new Date().toISOString().slice(0, 10),
+  mode: '',
+  userId: '',
+  session: '',
+});
+/*
+const toggleModal = (participation) => {
+  setIsOpen(!isOpen); // Inverse la valeur de isOpen pour ouvrir ou fermer le modal
+  // Mettez à jour les informations de paiement avec les données de participation
+  setPaymentInfo({
+    ...paymentInfo,
+    userId: participation.user ? participation.user._id : '',
+    session: participation.session ? participation.session._id : '',
+    Prix: participation.session ? participation.session.prix : '', // Récupérer le prix de la session
+
+  });
+};
+*/
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setPaymentInfo({ ...paymentInfo, [name]: value });
+};
+
+/*
+
+const handleSubmit = async (participation, e) => {
+  e.preventDefault(); // Empêche le comportement de soumission par défaut du formulaire
+  try {
+    
+    const sessionPrice = participation.session ? participation.session.prix : 0;
+
+    // Comparer le prix de la session avec le prix payé
+    if (paymentInfo.price > sessionPrice) {
+      alert('Le prix payé est supérieur au prix de la session.');
+      return;
+    } else {
+      // Calculer la différence entre le prix de la session et le prix payé
+      const difference = sessionPrice - paymentInfo.price;
+      
+      // Mettre à jour le prix de la session dans la base de données
+      const updatedSession = {
+        ...participation.session,
+        prix: difference,
+      };
+
+      // Effectuer la mise à jour dans la base de données
+      await axios.put(`http://localhost:5000/api/session/updateSession/${participation.session._id}`, updatedSession);
+    }
+
+    console.log('userId:', paymentInfo.userId);
+    console.log('session:', paymentInfo.session);
+
+    const response = await axios.post('http://localhost:5000/api/payement/EffectuerPayement', paymentInfo);
+    toggleModal(); // Ferme le modal après le paiement réussi
+  } catch (error) {
+    console.error('Erreur lors du paiement :', error.message);
+    alert('Une erreur s\'est produite lors du paiement.');
+  }
+};
+
+*/
+const toggleModal = (participation) => {
+  setIsOpen(!isOpen); // Inverse la valeur de isOpen pour ouvrir ou fermer le modal
+  // Mettez à jour les informations de paiement avec les données de participation
+
+  // Vérifier si participation.session est défini avant d'accéder à ses propriétés
+  const sessionPrice = participation.session ? participation.session.prix : '';
+
+  setPaymentInfo({
+    ...paymentInfo,
+    userId: participation.user ? participation.user._id : '',
+    session: participation.session ? participation.session._id : '',
+    Prix: sessionPrice, // Utiliser le prix de la session récupéré
+  });
+};  
+
+const handleSubmit = async (participation, e) => {
+  e.preventDefault(); // Empêche le comportement de soumission par défaut du formulaire
+  try {
+    // Récupérer le prix de la session et le prix payé
+    const sessionPrice = paymentInfo.Prix;
+    const paymentPrice = paymentInfo.price;
+
+    // Vérifier si les prix sont valides
+    if (sessionPrice === undefined || paymentPrice === undefined) {
+      console.error('Les prix ne sont pas définis.');
+      return;
+    }
+
+    // Vérifier si le prix payé est inférieur au prix de la session
+    if (paymentPrice < sessionPrice) {
+      // Appeler l'API de paiement avec les informations de paiement
+      const response = await axios.post('http://localhost:5000/api/payement/EffectuerPayement', paymentInfo);
+      console.log('Le paiement a été effectué avec succès.');
+      alert('Le paiement a été effectué avec succès.');
+
+      // Calculer la différence entre le prix de la session et le prix payé
+      const difference = sessionPrice - paymentPrice;
+
+      // Mettre à jour le prix de la session dans la base de données
+      const updatedSession = {
+        ...participation.session,
+        prix: difference,
+      };
+
+      // Effectuer la mise à jour dans la base de données
+      await axios.put(`http://localhost:5000/api/session/updateSessionPrice/${paymentInfo.session}`, updatedSession);
+      console.log('Mise à jour de la session effectuée avec succès.');
+
+      // Appel à nouveau updateEtat avec la participation mise à jour
+      await updateEtat(participation);
+    } else {
+      // Si le prix payé est supérieur ou égal au prix de la session, afficher un message d'erreur
+      alert('Le prix payé est supérieur ou égal au prix de la session.');
+    }
+  } catch (error) {
+    console.error('Erreur lors du paiement :', error.message);
+    alert('Une erreur s\'est produite lors du paiement.');
+  }
+};
+
+
+  return (
+    <DashboardLayout>
+      <DashboardNavbar />
+      <ArgonBox py={3}>
+        <div className="content">
+          <Row>
+            <Col md={12}>
+              <Card>
+                <CardHeader>
+                  <h1 className="p1">Les Participations</h1>
+                  <div style={{ marginBottom: '10px', marginLeft: '980px' }}>
+                    <form className="d-flex" onSubmit={(e) => e.preventDefault()}>
+                      <input style={{ padding: '10px', marginRight: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '300px' }} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
+                    </form>
+                  </div><br /><br />
+                </CardHeader>
+                <CardBody>
+                  <div className="table-responsive">
+                    <Stack>
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Username</th>
+                            {/* <th scope="col">email</th>*/}
+                            <th scope="col">Telephnoe</th>
+                            <th scope="col">Date Debut</th>
+                            <th scope="col">Date Fin</th>
+                            <th scope="col">Lieu</th>
+                           {/* <th scope="col">Capacite</th>*/}
+                            <th scope="col">Formation</th>
+                            <th scope="col">Prix </th>
+                            <th scope="col"> Payement</th>
+                            <th scope="col"> Reçu</th>
+                           {/*  <th scope="col"> Observation</th>*/}
+
+
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {currentParticipations.map((participation, index) => (
+  <tr key={index}>
+    <td>{participation.user ? participation.user.username : '-'}</td>
+    <td>{participation.user ? participation.user.telephone : '-'}</td>
+    <td>{participation.session ? participation.session.dateDebut : '-'}</td>
+    <td>{participation.session ? participation.session.dateFin : '-'}</td>
+    <td>{participation.session ? participation.session.lieu : '-'}</td>
+    <td>{participation.session && participation.session.formation ? participation.session.formation.titre : '-'}</td>
+    <td>{participation.session && participation.session ? `${participation.session.prix} DT` : '-'}</td>
+
+
+    <td>{participation.session ? participation.user._id : '-'}</td>
+    <td>{participation.session ? participation.session._id : '-'}</td>
+
+   
+        <td>
+        <Button color="primary" onClick={() => toggleModal(participation)}>Payez</Button>
+      </td>
+
+    <td>
+        <button style={{ margin: '10px',border:'2px white  dotted' }} onClick={() => Impression(participation)}>
+          <PrintIcon /> Imprimer
+        </button>
+      </td>
+  </tr>
+))}
+
+                        </tbody>
+                      </table>
+                      <Pagination style={{ marginTop: '20px', fontSize: '1.2rem' }}>
+                        <PaginationItem disabled={currentPage === 1}>
+                          <PaginationLink previous onClick={() => paginate(currentPage - 1)} />
+                        </PaginationItem>
+                        {Array.from({ length: pageCount }, (_, i) => (
+                          <PaginationItem key={i} active={i + 1 === currentPage}>
+                            <PaginationLink onClick={() => paginate(i + 1)}>{i + 1}</PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem disabled={currentPage === pageCount}>
+                          <PaginationLink next onClick={() => paginate(currentPage + 1)} />
+                        </PaginationItem>
+                      </Pagination>
+                    </Stack>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+        <div>
+        <Modal isOpen={isOpen} toggle={toggleModal}>
+        <ModalHeader toggle={toggleModal}>Formulaire de paiement</ModalHeader>
+        <ModalBody>
+        <form onSubmit={(e) => handleSubmit(participations, e)}>
+            <FormGroup>
+              <Label for="price">Prix:</Label>
+              <Input type="number" name="price" id="price" value={paymentInfo.price} onChange={handleInputChange} required />
+            </FormGroup>
+            <FormGroup>
+              <Label for="date">Date:</Label>
+              <Input type="date" name="date" id="date" value={paymentInfo.date} onChange={handleInputChange} required />
+            </FormGroup>
+            <FormGroup>
+              <Label for="mode">Mode de paiement:</Label>
+              <Input type="select" name="mode" id="mode" value={paymentInfo.mode} onChange={handleInputChange} required>
+                <option value="">Sélectionnez un mode de paiement</option>
+                <option value="Carte de crédit">Carte de crédit</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Virement bancaire">Virement bancaire</option>
+              </Input>
+            </FormGroup>
+            <Button type="submit" color="primary" style={{margin:'5px'}}>Enregistrez</Button>
+            <Button color="secondary" onClick={toggleModal}>Fermer</Button>
+          </form>
+        </ModalBody>
+      </Modal>
+    </div>
+      </ArgonBox>
+    </DashboardLayout>
+  );
+}
+
+export default ListesInscrit;

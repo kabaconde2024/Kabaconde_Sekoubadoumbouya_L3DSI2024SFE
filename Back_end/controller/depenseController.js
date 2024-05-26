@@ -8,7 +8,7 @@ const Depense = require('../model/Depense');
 const creerDepense = async (req, res) => {
     try {
 
-        const {intitule, description, prix } = req.body;
+        const {intitule, description, prix,date } = req.body;
 
         // Vérifier si la Depense existe déjà
         const existingDepense = await Depense.findOne({ intitule });
@@ -22,6 +22,7 @@ const creerDepense = async (req, res) => {
             intitule,
             description,
             prix,
+            date,
             
         });
 

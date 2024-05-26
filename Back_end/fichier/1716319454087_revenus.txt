@@ -1,0 +1,183 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
+import './Revenus.css';
+import { Pagination, Paper } from '@mui/material'; // Importez depuis Material-UI
+
+function Revenus() {
+    const [formations, setFormations] = useState([]);
+    const [payments, setPayments] = useState([]);
+    const [total, setTotal] = useState(0); // Initialisez le total à 0
+    const [totalFormations, setTotalFormations] = useState(0); // Initialisez le total des formations à 0
+    const [totalCumulative, setTotalCumulative] = useState(0);  // Initialisez le total cumulatif à 0
+
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const [currentPageFormations, setCurrentPageFormations] = useState(1);
+    const [itemsPerPageFormations] = useState(1); // Définissez le nombre d'éléments par page pour les formations
+
+    const [currentPagePayments, setCurrentPagePayments] = useState(1);
+    const [itemsPerPagePayments] = useState(1); // Définissez le nombre d'éléments par page pour les paiements
+
+    useEffect(() => {
+        fetchFormations();
+        fetchPayments();
+    }, []);
+
+    useEffect(() => {
+        const cumulativeTotal = totalFormations + total;
+        setTotalCumulative(cumulativeTotal);
+    }, [totalFormations, total]);
+
+    const fetchFormations = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/formation/afficherFormations');
+            const formationsWithSessions = await Promise.all(response.data.map(async (formation) => {
+                const sessionsResponse = await axios.get(`http://localhost:5000/api/formation/getAllSessionsForFormation/${formation._id}`);
+                formation.sessions = sessionsResponse.data;
+                // Calcul de la somme des prix des sessions
+                formation.totalPrice = formation.sessions.reduce((total, session) => total + (session.prix || 0), 0);
+                return formation;
+            }));
+
+            // Calculer le total des prix des formations
+            const totalFormationsAmount = formationsWithSessions.reduce((total, formation) => total + formation.totalPrice, 0);
+
+            // Mettre à jour l'état total des formations
+            setTotalFormations(totalFormationsAmount);
+
+            setFormations(formationsWithSessions);
+        } catch (error) {
+            console.error('Erreur lors de la récupération des formations :', error.message);
+        }
+    };
+
+    const fetchPayments = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/payments');
+            const payments = response.data;
+
+            // Calculer le total des paiements
+            const totalPaymentsAmount = payments.reduce((acc, payment) => acc + payment.amount, 0);
+
+            // Mettre à jour l'état des paiements et le total
+            setPayments(payments);
+            setTotal(totalPaymentsAmount);
+        } catch (error) {
+            console.error('Erreur lors de la récupération des paiements :', error.message);
+        }
+    };
+
+    const indexOfLastFormation = currentPageFormations * itemsPerPageFormations;
+    const indexOfFirstFormation = indexOfLastFormation - itemsPerPageFormations;
+    const paginatedFormations = formations.slice(indexOfFirstFormation, indexOfLastFormation);
+
+    const paginateFormations = (pageNumber) => setCurrentPageFormations(pageNumber);
+
+    const indexOfLastPayment = currentPagePayments * itemsPerPagePayments;
+    const indexOfFirstPayment = indexOfLastPayment - itemsPerPagePayments;
+    const paginatedPayments = payments.slice(indexOfFirstPayment, indexOfLastPayment);
+
+    const paginatePayments = (pageNumber) => setCurrentPagePayments(pageNumber);
+
+    return (
+        <DashboardLayout>
+            <DashboardNavbar />
+            <ArgonBox py={3}>
+                <div className="content">
+                    <Row>
+                        <Col md={10} style={{ paddingLeft: '200px' }}>
+                            <div className="horizontal-cards-container">
+                                {paginatedFormations.map((formation, index) => (
+                                    <Card key={index} className="horizontal-card">
+                                        <CardHeader className="text-center">
+                                            <h1 className="p1">{formation.titre ? formation.titre : '-'}</h1>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <div>
+                                                <h5 className="mt-4 text-center">Sessions de la formation :</h5>
+                                                <table className="table table-striped table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">Date Debut</th>
+                                                            <th scope="col">Date Fin</th>
+                                                            <th scope="col">Lieu</th>
+                                                            <th scope="col">Prix</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {formation.sessions.map((session, index) => (
+                                                            <tr key={index}>
+                                                                <td>{session.dateDebut ? session.dateDebut : '-'}</td>
+                                                                <td>{session.dateFin ? session.dateFin : '-'}</td>
+                                                                <td>{session.lieu ? session.lieu : '-'}</td>
+                                                                <td>{session.prix ? session.prix : '-'}</td>
+                                                            </tr>
+                                                        ))}
+                                                        <tr className="total-row">
+                                                            <td colSpan="3" className="text-center"><strong>Total</strong></td>
+                                                            <td className="total-price">{formation.totalPrice}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </CardBody>
+                                    </Card>
+                                ))}
+                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+                                    <Pagination
+                                        count={Math.ceil(formations.length / itemsPerPageFormations)}
+                                        variant="outlined"
+                                        shape="rounded"
+                                        page={currentPageFormations}
+                                        onChange={(event, page) => paginateFormations(page)}
+                                        style={{ fontSize: '1.5rem' }} // Ajustez la taille de la police ici
+                                    />
+                                </div>
+                            </div>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col md={10} style={{ paddingLeft: '200px',marginTop:'50px' }}>
+                            <h2>LES REVENUS OBTENUS À PARTIR DE L`ADHÉSION</h2>
+                            <div className="horizontal-cards-container">
+                                <table className="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Nom</th>
+                                            <th scope="col">Montant</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody >
+                                        {paginatedPayments.map((payment, index) => (
+                                            <tr key={index}>
+                                                <td>{payment.name ? payment.name : '-'}</td>
+                                                <td>{payment.amount ? `$${payment.amount / 100}` : '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                                    <Pagination
+                                        count={Math.ceil(payments.length / itemsPerPagePayments)}
+                                        variant="outlined"
+                                        shape="rounded"
+                                        page={currentPagePayments}
+                                        onChange={(event, page) => paginatePayments(page)}
+                                        style={{ fontSize: '1.5rem' }} // Ajustez la taille de la police ici
+                                    />
+                                </div>
+                            </div>
+                        </Col>
+                    </Row>
+                    <h3 style={{ paddingLeft: '200px' }}>LA SOMME CUMULATIVE DES REVENUS : <strong style={{ color: 'black' }}>{totalCumulative}</strong></h3>
+                </div>
+            </ArgonBox>
+        </DashboardLayout>
+    );
+}
+
+export default Revenus;

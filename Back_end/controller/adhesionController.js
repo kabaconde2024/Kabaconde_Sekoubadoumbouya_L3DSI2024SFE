@@ -1,4 +1,4 @@
-const Demande = require('../model/Demande');
+const Adhesion = require('../model/Adhesion');
 const User = require('../model/User');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -30,7 +30,7 @@ const DemandeAdhesion = async (req, res) => {
     // Vérifier si l'utilisateur a déjà fait une demande cette année
     const startOfYear = new Date(today.getFullYear(), 0, 1); // Début de l'année
     const endOfYear = new Date(today.getFullYear(), 11, 31); // Fin de l'année
-    const demandeExistanteCetteAnnee = await Demande.findOne({ user: userId, dateDemande: { $gte: startOfYear, $lte: endOfYear } });
+    const demandeExistanteCetteAnnee = await Adhesion.findOne({ user: userId, dateDemande: { $gte: startOfYear, $lte: endOfYear } });
 
     if (demandeExistanteCetteAnnee) {
       // L'utilisateur a déjà fait une demande cette année
@@ -40,7 +40,7 @@ const DemandeAdhesion = async (req, res) => {
 
     // Ajouter l'ID de l'utilisateur à la collection "demande" ou effectuer toute autre logique nécessaire
     // Exemple avec MongoDB :
-    const demande = await Demande.create({ user: userId, message,dateDemande: today });
+    const demande = await Adhesion.create({ user: userId, message,dateDemande: today });
 
     // Informer l'admin de la demande avec le nom de l'utilisateur
     // Vous pouvez utiliser des websockets, envoyer un email à l'admin, ou stocker les demandes dans une collection "notifications" dans la base de données
@@ -64,11 +64,11 @@ const getDemandes = async (req, res) => {
     }
 
     // Récupérer les demandes associées à l'utilisateur spécifié par userId
-    const demandes = await Demande.find({ user: userId }).populate('user', 'username');
+    const demandes = await Adhesion.find({ user: userId }).populate('user', 'username');
 
     if (demandes.length === 0) {
       // Aucune demande n'est trouvée pour cet utilisateur
-      const defaultMessage = new Demande().message;
+      const defaultMessage = new Adhesion().message;
       res.status(200).json({ success: true, message: defaultMessage });
     } else {
       // Vérifier s'il y a des demandes acceptées
@@ -103,7 +103,7 @@ const getDemandes = async (req, res) => {
         );
 
         // Recherche de la demande d'adhésion correspondante
-      const demande = await Demande.findOne({ user: userId });
+      const demande = await Adhesion.findOne({ user: userId });
   
       if (!demande) {
         return res.status(404).json({ error: 'Demande d\'adhésion non trouvée' });
@@ -126,11 +126,11 @@ const getDemandes = async (req, res) => {
 const getDemande = async (req, res) => {
   try {
     // Récupérer toutes les demandes depuis la base de données et peupler les informations de l'utilisateur
-    const demandes = await Demande.find().populate('user', 'username');
+    const demandes = await Adhesion.find().populate('user', 'username');
 
     if (demandes.length === 0) {
       // Aucune demande n'est trouvée, utiliser le contenu par défaut du message
-      const defaultMessage = new Demande().message;
+      const defaultMessage = new Adhesion().message;
       res.status(200).json({ success: true, message: defaultMessage });
     } else {
       res.status(200).json({ success: true, demandes });
@@ -147,7 +147,7 @@ const getDemandesByUser = async (req, res) => {
 
   try {
     // Récupérer les demandes de l'utilisateur spécifié depuis la base de données et peupler les informations de l'utilisateur
-    const demandes = await Demande.find({ user: userId }).populate('user', 'username');
+    const demandes = await Adhesion.find({ user: userId }).populate('user', 'username');
 
     if (demandes.length === 0) {
       // Aucune demande n'est trouvée pour cet utilisateur
@@ -168,7 +168,7 @@ const supprimerDemande= async (req, res) => {
     const userId = req.params.userId;
     
     // Supprimer la demande d'adhésion correspondante dans la base de données
-    await Demande.findOneAndDelete({ user: userId });
+    await Adhesion.findOneAndDelete({ user: userId });
 
     // Répondre avec un statut 200 pour indiquer que la demande a été supprimée avec succès
     res.status(200).json({ message: 'Demande d\'adhésion supprimée avec succès.' });
@@ -180,7 +180,22 @@ const supprimerDemande= async (req, res) => {
 };
 
 
+const modifierPaye = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Mettre à jour l'attribut "paye" dans la demande correspondante à true
+    await Adhesion.findOneAndUpdate({ user: userId }, { paye: true });
+
+    // Répondre avec un statut 200 pour indiquer que la demande a été mise à jour avec succès
+    res.status(200).json({ success: true, message: 'Attribut "paye" mis à jour avec succès.' });
+  } catch (error) {
+    // En cas d'erreur, répondre avec un statut 500 et un message d'erreur
+    console.error('Erreur lors de la mise à jour de l\'attribut "paye" de la demande :', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la mise à jour de l\'attribut "paye" de la demande.' });
+  }
+};
 
   
-  module.exports = { DemandeAdhesion,supprimerDemande,getDemandes,accepterAdhesion,getDemande,getDemandesByUser};
+  module.exports = { modifierPaye,DemandeAdhesion,supprimerDemande,getDemandes,accepterAdhesion,getDemande,getDemandesByUser};
   
