@@ -1,0 +1,125 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import { Row, Col, Card, CardHeader } from 'reactstrap';
+import Typography from '@mui/material/Typography';
+
+function Formationassures() {
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState('');
+  const [sessionsFormation, setSessionsFormation] = useState([]);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const userIdFromSession = sessionStorage.getItem('userId');
+        setUserId(userIdFromSession);
+
+        const response = await axios.get(`http://localhost:5000/api/session/sessionsFormateur/${userIdFromSession}`);
+        console.log('Sessions récupérées:', response.data.sessionsFormateur); // Ajout du console.log
+        setSessions(response.data.sessionsFormateur);
+        setLoading(false);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des sessions du formateur:', error);
+      }
+    };
+
+    fetchSessions();
+  }, []);
+
+ 
+  
+
+  const fetchSessions = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/session/afficherSessions');
+      setSessionsFormation(response.data);
+      console.log("sessionsFormation :",sessionsFormation);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des sessions :', error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  if (loading) {
+    return <div>Chargement...</div>;
+  }
+
+  return (
+    <DashboardLayout>
+      <DashboardNavbar />
+      <ArgonBox py={3}>
+        <div className="content">
+          <Row>
+            <Col md={12}>
+              <Card>
+                <CardHeader>
+                  <Typography gutterBottom variant="h5" component="div" style={{ marginBottom: '16px', fontSize: '2rem', fontWeight: 'bold', color: '#3f51b5', fontFamily: 'Arial, sans-serif', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)' }}>
+                    Les Formations Assurées 
+                  </Typography> 
+                  <div style={{ marginBottom: '30px', marginLeft: '880px' }}></div><br></br><br></br>
+                </CardHeader>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      </ArgonBox>
+ 
+      <div>
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th>Formation</th>
+              <th>Formateur</th>
+              <th>Date de début</th>
+              <th>Date de fin</th>
+              <th>Lieu</th>
+              <th>Capacité</th>
+
+              <th>Prix</th>
+             
+            </tr>
+          </thead>
+          <tbody>
+          {sessionsFormation.map((session, index) => (
+      <tr key={index}>
+        <td>{session.titre}</td>
+        <td>{session.userSession.username}</td>
+
+        <td>
+          {session.date && (
+            <span>
+              {new Date(session.date).getFullYear()}-{('0' + (new Date(session.date).getMonth() + 1)).slice(-2)}-
+              {('0' + new Date(session.date).getDate()).slice(-2)}
+            </span>
+          )}
+        </td>
+        <td>
+          {session.dateFin && (
+            <span>
+              {new Date(session.dateFin).getFullYear()}-{('0' + (new Date(session.dateFin).getMonth() + 1)).slice(-2)}-
+              {('0' + new Date(session.dateFin).getDate()).slice(-2)}
+            </span>
+          )}
+        </td>
+        <td>{session.lieu}</td>
+        <td>{session.capacite}</td>
+        <td>{session.prix}</td>
+        
+      </tr>
+    ))}
+
+          </tbody>
+        </table>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+export default Formationassures;
