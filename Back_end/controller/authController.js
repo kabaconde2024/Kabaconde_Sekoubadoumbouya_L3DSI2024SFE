@@ -3,6 +3,7 @@ const User = require('../model/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt");
 
+{/*  
 const register = async (req, res) => {
     try {
         const { username, email,telephone } = req.body;
@@ -33,7 +34,57 @@ const register = async (req, res) => {
         res.status(500).json({ message: "Erreur lors de l'inscription." });
     }
 };
+*/}
+const register = async (req, res) => {
+    try {
+        const { username, email, telephone } = req.body;
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
+        // Vérifier si l'e-mail est valide
+        const emailRegex = /^[^\s@]+@gmail\.(com|tn|gn)$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Veuillez saisir une adresse e-mail valide se terminant par @gmail.com, @gmail.tn ou @gmail.gn.' });
+        }
+
+        // Vérifier si le numéro de téléphone est valide (8 chiffres)
+        const telephoneRegex = /^\d{8}$/;
+        if (!telephoneRegex.test(telephone)) {
+            return res.status(400).json({ message: 'Veuillez saisir un numéro de téléphone valide contenant exactement 8 chiffres.' });
+        }
+
+        // Vérifier si le mot de passe contient au moins une lettre et un chiffre
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        if (!passwordRegex.test(req.body.password)) {
+            return res.status(400).json({ message: 'Le mot de passe doit contenir au moins une lettre et un chiffre, et être d\'au moins 8 caractères.' });
+        }
+
+        // Vérifier si l'utilisateur existe déjà
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser) {
+            return res.status(400).json({ message: 'Cet utilisateur existe déjà.' });
+        }
+
+        // Créer un nouvel utilisateur avec le mot de passe haché et formations initialisées à un tableau vide
+        const newUser = new User({
+            username,
+            email,
+            telephone,
+            password: hashedPassword,
+            formations: [],
+        });
+
+        // Sauvegarder l'utilisateur dans la base de données
+        await newUser.save();
+
+        res.status(201).json({ message: 'Inscription réussie.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de l'inscription." });
+    }
+};
+
+{/*  
 const login = async (req, res) => {
     try {
         // Log de la réception de la requête POST sur /connexion
@@ -67,6 +118,49 @@ const login = async (req, res) => {
         // Gestion des erreurs lors de la connexion
         console.error("Erreur lors de la connexion :", error);
         res.status(500).json({ error: "Erreur serveur lors de la connexion" });
+    }
+};
+*/}
+
+const login = async (req, res) => {
+    try {
+        // Log de la réception de la requête POST sur /connexion
+        console.log('Requête POST reçue sur /connexion', req.body);
+
+        const { email, password } = req.body;
+
+        // Vérification de la présence des données du formulaire
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Les données du formulaire sont manquantes.' });
+        }
+
+        // Recherche de l'utilisateur dans la base de données
+        const user = await User.findOne({ email });
+
+        // Vérification si l'utilisateur existe
+        if (!user) {
+            return res.status(401).json({ error: 'Adresse e-mail ou mot de passe incorrect.' });
+        }
+
+        // Vérification du mot de passe
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Adresse e-mail ou mot de passe incorrect.' });
+        }
+
+        // Réponse de connexion réussie avec le rôle et l'ID de l'utilisateur
+        res.status(200).json({ 
+            roles: user.roles, 
+            userId: user._id, 
+            username: user.username, 
+            email: user.email, 
+            message: 'Connexion réussie.' 
+        });
+        console.log('userId:', user._id);
+    } catch (error) {
+        // Gestion des erreurs lors de la connexion
+        console.error("Erreur lors de la connexion :", error);
+        res.status(500).json({ error: "Erreur serveur lors de la connexion." });
     }
 };
 
@@ -129,6 +223,8 @@ const ajouterRole = async (req, res) => {
 
 
 
+
+
 const removeRole = async (req, res) => {
     try {
       const userId = req.params.id;
@@ -177,6 +273,16 @@ const getcollaborateurs= async (req, res) => {
   };
 
 
+  const getFormateur= async (req, res) => {
+    try {
+      const collaborateurs = await User.find({ roles: 'formateur' });
+      res.json(collaborateurs);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des collaborateurs :', error);
+      res.status(500).json({ error: 'Erreur serveur lors de la récupération des collaborateurs.' });
+    }
+  };
+
   const updatePassword = async (req, res) => {
     try {
         const { newPassword } = req.body;
@@ -221,4 +327,4 @@ const comparePassword= async (req, res) => {
   };
 
 
-module.exports = { register ,comparePassword,updatePassword,login,ajouterRole,removeRole,getRoles,updateUserById,getcollaborateurs};
+module.exports = { register ,getFormateur,comparePassword,updatePassword,login,ajouterRole,removeRole,getRoles,updateUserById,getcollaborateurs};

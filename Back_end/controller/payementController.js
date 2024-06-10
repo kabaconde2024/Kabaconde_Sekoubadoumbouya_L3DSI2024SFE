@@ -47,7 +47,37 @@ const recupererPaiements = async (req, res) => {
 };
 
 
+const recupererPaiementsUtilisateur = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const sessionId = req.params.sessionId;
 
+    // Récupérer tous les paiements associés à cet utilisateur pour cette session depuis la base de données
+    const paiementsUtilisateurPourSession = await Payement.find({ userId: userId, session: sessionId })
+      .populate('userId', 'username')  // Populate the username from the User model
+      .populate('session', 'titre');   // Populate the titre from the Session model
+
+    // Calculer la somme des prix payés en utilisant la méthode reduce
+    const sommePrixPayes = paiementsUtilisateurPourSession.reduce((total, paiement) => total + paiement.price, 0);
+
+    // Extraire le nom d'utilisateur et le titre de la session des paiements (s'ils existent)
+    const username = paiementsUtilisateurPourSession.length > 0 ? paiementsUtilisateurPourSession[0].userId.username : 'N/A';
+    const sessionTitre = paiementsUtilisateurPourSession.length > 0 ? paiementsUtilisateurPourSession[0].session.titre : 'N/A';
+
+    // Répondre avec les données nécessaires
+    res.status(200).json({
+      sommePrixPayes,
+      paiementsUtilisateurPourSession,
+      sessionTitre,
+      username
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des paiements de l\'utilisateur pour cette session :', error);
+    res.status(500).json({ message: 'Une erreur s\'est produite lors de la récupération des paiements de l\'utilisateur pour cette session.' });
+  }
+};
+
+{/*  
 
 const recupererPaiementsUtilisateur = async (req, res) => {
   try {
@@ -69,7 +99,7 @@ const recupererPaiementsUtilisateur = async (req, res) => {
     res.status(500).json({ message: 'Une erreur s\'est produite lors de la récupération des paiements de l\'utilisateur pour cette session.' });
   }
 };
-
+*/}
 const PaiementsUtilisateur = async (req, res) => {
   try {
     // Récupérer l'ID de l'utilisateur à partir des paramètres de la requête
